@@ -3,14 +3,19 @@ import Card from './Card.jsx'
 import { supabase } from './lib/supabase.js'
 
 const topLinks = [
-  'Mapa do site',
-  'Lei de Acesso à Informação',
-  'Portal transparência',
-  'E-SIC',
-  'Ouvidoria'
+  { label: 'Lei de Acesso à Informação', href: 'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12527.htm' },
+  { label: 'Portal Transparência',       href: 'https://transparencia.parintins.am.gov.br/' },
+  { label: 'E-SIC',                      href: 'https://transparencia.parintins.am.gov.br/?q=517-lista-8317-servico-de-informacao-ao-cidadao-e-sic' },
+  { label: 'Ouvidoria',                  href: 'https://transparencia.parintins.am.gov.br/?q=517-lista-8546-ouvidoria' },
 ]
 
-const navItems = ['Prefeitura', 'Portal da Transparência', 'Serviço de Informação', 'Ouvidoria', 'Contatos']
+const navItems = [
+  { label: 'Prefeitura de Parintins',    href: 'https://parintins.am.gov.br/' },
+  { label: 'Portal Transparência',       href: 'https://transparencia.parintins.am.gov.br/' },
+  { label: 'Serviço de Informação',      href: 'https://transparencia.parintins.am.gov.br/?q=517-lista-8317-servico-de-informacao-ao-cidadao-e-sic' },
+  { label: 'Ouvidoria',                  href: 'https://transparencia.parintins.am.gov.br/?q=517-lista-8546-ouvidoria' },
+  { label: 'Contato',                    href: 'https://transparencia.parintins.am.gov.br/?q=517-lista-8134-fale-conosco' },
+]
 
 function App() {
   const [expandedCard, setExpandedCard] = useState(null)
@@ -78,14 +83,13 @@ function App() {
           <div className="container topbar__inner">
             <div className="topbar__links">
               {topLinks.map((link) => (
-                <a key={link} href="#">{link}</a>
+                <a key={link.href} href={link.href} target="_blank" rel="noreferrer">{link.label}</a>
               ))}
             </div>
             <div className="topbar__social social">
               <a href="#"><i className="bi bi-instagram"></i></a>
               <a href="#"><i className="bi bi-facebook"></i></a>
               <a href="#"><i className="bi bi-youtube"></i></a>
-              <a href="#"><i className="bi bi-twitter"></i></a>
               <a href="#"><i className="bi bi-whatsapp"></i></a>
             </div>
           </div>
@@ -123,8 +127,8 @@ function App() {
             </button>
             <div className={`navbar-nav${navOpen ? ' open' : ''}`}>
               {navItems.map((item) => (
-                <a key={item} className="nav-link" href="#" onClick={() => setNavOpen(false)}>
-                  {item}
+                <a key={item.href} className="nav-link" href={item.href} target="_blank" rel="noreferrer" onClick={() => setNavOpen(false)}>
+                  {item.label}
                 </a>
               ))}
             </div>
@@ -161,8 +165,8 @@ function App() {
       <footer className="site-footer">
         <div className="container footer-inner">
           <div>
-            <h2>AcheiTudo</h2>
-            <p>Portal inspirado no visual institucional do site com cores, gradações e posicionamento semelhantes.</p>
+            <h2>Radar Parintins</h2>
+            <p>Aviso Importante: Este painel não constitui meio oficial de divulgação institucional. Seu conteúdo possui natureza meramente informativa, preliminar e não vinculante, razão pela qual não gera direitos, obrigações, efeitos legais ou presunção de veracidade oficial. Para fins formais, legais ou administrativos, deverão ser observados exclusivamente os canais oficiais de publicação do Município.</p>
           </div>
           <div className="footer-links">
             <a href="#">Política de privacidade</a>
