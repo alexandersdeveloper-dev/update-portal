@@ -18,10 +18,22 @@ const cards = [
     icon: 'bi-star-fill',
     tone: '#2f86de',
     features: [
-      '1.1 Possui sítio oficial próprio na internet',
-      '1.2 Possui portal da transparência próprio ou compartilhado na internet?',
-      '1.3 O acesso ao portal transparência está visível na capa do site?',
-      '1.4 O site e o portal de transparência contêm ferramenta de pesquisa de conteúdo?'
+      {
+        criterion: '1.1 Possui sítio oficial próprio na internet',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      },
+      {
+        criterion: '1.2 Possui portal da transparência próprio ou compartilhado na internet?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      },
+      {
+        criterion: '1.3 O acesso ao portal transparência está visível na capa do site?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      },
+      {
+        criterion: '1.4 O site e o portal de transparência contêm ferramenta de pesquisa de conteúdo?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      }
     ]
   },
   {
@@ -30,15 +42,42 @@ const cards = [
     icon: 'bi-building',
     tone: '#2f86de',
     features: [
-      '2.1 Divulga a sua estrutura organizacional e a norma que a institui/altera?',
-      '2.2 Divulga competências e/ou atribuições?',
-      '2.3 Identifica o nome dos atuais responsáveis pela gestão do Poder/Órgão?',
-      '2.4 Divulga os endereços e telefones atuais do Poder ou órgão e e-mails institucionais?',
-      '2.5 Divulga o horário de atendimento?',
-      '2.6 Divulga os atos normativos próprios?',
-      '2.7 Divulga as perguntas e respostas mais frequentes?',
-      '2.8 Participa em redes sociais e apresenta, no seu sítio institucional?',
-      '2.9 Inclui botão do Radar da Transparência Pública?'
+      {
+        criterion: '2.1 Divulga a sua estrutura organizacional e a norma que a institui/altera?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      },
+      {
+        criterion: '2.2 Divulga competências e/ou atribuições?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      },
+      {
+        criterion: '2.3 Identifica o nome dos atuais responsáveis pela gestão do Poder/Órgão?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      },
+      {
+        criterion: '2.4 Divulga os endereços e telefones atuais do Poder ou órgão e e-mails institucionais?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      },
+      {
+        criterion: '2.5 Divulga o horário de atendimento?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      },
+      {
+        criterion: '2.6 Divulga os atos normativos próprios?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      },
+      {
+        criterion: '2.7 Divulga as perguntas e respostas mais frequentes?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      },
+      {
+        criterion: '2.8 Participa em redes sociais e apresenta, no seu sítio institucional?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      },
+      {
+        criterion: '2.9 Inclui botão do Radar da Transparência Pública?',
+        subitems: [{ text: 'Disponibilidade', status: 'check' }]
+      }
     ]
   },
   {
