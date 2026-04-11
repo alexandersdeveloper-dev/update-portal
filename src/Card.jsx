@@ -1,12 +1,4 @@
-import { useState } from 'react'
-
-function Card({ title, description, icon, tone, features }) {
-  const [isExpanded, setIsExpanded] = useState(false)
-
-  const toggleExpanded = () => {
-    setIsExpanded(!isExpanded)
-  }
-
+function Card({ title, description, icon, tone, features, isExpanded, onToggle }) {
   return (
     <article className="priority-card" style={{ '--tone': tone }}>
       <div className="priority-card__header">
@@ -16,7 +8,7 @@ function Card({ title, description, icon, tone, features }) {
             <i className={`bi ${icon}`} />
           </div>
         </div>
-        <button className="priority-card__toggle" onClick={toggleExpanded}>
+        <button className="priority-card__toggle" onClick={onToggle}>
           <i className={`bi ${isExpanded ? 'bi-chevron-up' : 'bi-chevron-down'}`} />
         </button>
       </div>

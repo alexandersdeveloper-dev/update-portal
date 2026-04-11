@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Card from './Card.jsx'
 
 const topLinks = [
@@ -515,11 +516,72 @@ const cards = [
     icon: 'bi-info-circle-fill',
     tone: '#2f86de',
     features: [
-      'Disponibilidade',
-      'Atualidade',
-      'Série Histórica',
-      'Gravação de Relatórios',
-      'Filtro de Pesquisa'
+      {
+        criterion: '12.1 Existe o SIC no site ou no portal de transparência e indica a unidade/setor responsável?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '12.2 Indica o endereço físico, o telefone e o e-mail da unidade responsável pelo SIC, além do horário de funcionamento?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '12.3 Há possibilidade de envio de pedidos de informação de forma eletrônica (e-SIC)?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '12.4 A solicitação por meio de eSic é simples, ou seja, sem a exigência de itens de identificação do requerente que dificultem ou impossibilitem o acesso à informação, tais como: envio de documentos, assinatura reconhecida, declaração de responsabilidade, maioridade?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '12.5 Divulga nesta seção, instrumento normativo local que regulamente a Lei nº 12.527/2011 – LAI?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '12.6 Divulga, na seção relativa ao e-SIC, os prazos de resposta ao cidadão, incluindo o recursal, e as autoridades competentes para o exame dos pedidos, além do procedimento referente à realização do pedido e de eventual recurso?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '12.7 Divulga relatório anual estatístico contendo a quantidade de pedidos de acesso recebidos, atendidos, indeferidos, bem como informações genéricas sobre os solicitantes?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Série Histórica', status: 'check' },
+          { text: 'Gravação de Relatórios', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      },
+      {
+        criterion: '12.8 Divulga lista de documentos classificados em cada grau de sigilo, contendo pelo menos o assunto sobre o qual versa a informação, a categoria na qual ela se encontra, o dispositivo legal que fundamenta a classificação e o respectivo prazo?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Série Histórica', status: 'check' },
+          { text: 'Gravação de Relatórios', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      },
+      {
+        criterion: '12.9 Divulga lista das informações que tenham sido desclassificadas nos últimos 12 (doze) meses?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Série Histórica', status: 'check' },
+          { text: 'Gravação de Relatórios', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      }
     ]
   },
   {
@@ -528,11 +590,36 @@ const cards = [
     icon: 'bi-universal-access-circle',
     tone: '#2f86de',
     features: [
-      'Disponibilidade',
-      'Atualidade',
-      'Série Histórica',
-      'Gravação de Relatórios',
-      'Filtro de Pesquisa'
+      {
+        criterion: '13.1 O site oficial e o portal de transparência contêm símbolo de acessibilidade em destaque?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '13.2 O site e o portal de transparência contêm exibição do “caminho” de páginas percorridas pelo usuário?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '13.3 O site e o portal de transparência contêm opção de alto contraste?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '13.4 O site e o portal de transparência contêm ferramenta de redimensionamento de texto?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '13.5 Contém mapa do site institucional?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      }
     ]
   },
   {
@@ -541,11 +628,24 @@ const cards = [
     icon: 'bi-ear-fill',
     tone: '#2f86de',
     features: [
-      'Disponibilidade',
-      'Atualidade',
-      'Série Histórica',
-      'Gravação de Relatórios',
-      'Filtro de Pesquisa'
+      {
+        criterion: '14.1 Há informações sobre o atendimento presencial pela Ouvidoria (Indicação de endereço físico e telefone, além do horário de funcionamento)?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '14.2 Há canal eletrônico de acesso/interação com a ouvidoria?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '14.3 Divulga Carta de Serviços ao Usuário?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      }
     ]
   },
   {
@@ -554,11 +654,42 @@ const cards = [
     icon: 'bi-shield-lock-fill',
     tone: '#2f86de',
     features: [
-      'Disponibilidade',
-      'Atualidade',
-      'Série Histórica',
-      'Gravação de Relatórios',
-      'Filtro de Pesquisa'
+      {
+        criterion: '15.1 Identifica o encarregado/responsável pelo tratamento de dados pessoais e disponibiliza Canal de Comunicação com esse servidor (telefone e/ou e-mail)?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '15.2 Publica a sua Política de Privacidade e Proteção de Dados?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '15.3 Possibilita a demanda e o acesso a serviços públicos por meio digital, sem necessidade de solicitação presencial?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '15.4 Possibilita o acesso automatizado por sistemas externos em dados abertos (estruturados e legíveis por máquina), e a página contém as regras de utilização?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '15.5 Regulamenta a Lei Federal nº 14.129/2021 (Governo Digital) e divulga a normativa em seu portal?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '15.6 Realiza e divulga resultados de pesquisas de satisfação?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      }
     ]
   },
   {
@@ -567,11 +698,42 @@ const cards = [
     icon: 'bi-cash-stack',
     tone: '#2f86de',
     features: [
-      'Disponibilidade',
-      'Atualidade',
-      'Série Histórica',
-      'Gravação de Relatórios',
-      'Filtro de Pesquisa'
+      {
+        criterion: '16.1 Divulga as desonerações tributárias concedidas e a fundamentação legal individualizada?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '16.2 Divulga os valores da renúncia fiscal prevista e realizada, por tipo ou espécie de benefício ou incentivo fiscal?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Série Histórica', status: 'check' },
+          { text: 'Gravação de Relatórios', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      },
+      {
+        criterion: '16.3 Identifica os beneficiários das desonerações tributárias (benefícios ou incentivos fiscais)?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Série Histórica', status: 'check' },
+          { text: 'Gravação de Relatórios', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      },
+      {
+        criterion: '16.4 Divulga informações sobre projetos de incentivo à cultura (incluindo esportivos), identificando os projetos aprovados, o respectivo beneficiário e o valor aprovado?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Série Histórica', status: 'check' },
+          { text: 'Gravação de Relatórios', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      }
     ]
   },
   {
@@ -580,11 +742,36 @@ const cards = [
     icon: 'bi-bank',
     tone: '#2f86de',
     features: [
-      'Disponibilidade',
-      'Atualidade',
-      'Série Histórica',
-      'Gravação de Relatórios',
-      'Filtro de Pesquisa'
+      {
+        criterion: '17.1 Identifica as emendas parlamentares federais recebidas, contendo informações sobre a origem, a forma de repasse, o tipo de emenda, o número da emenda, a autoria, o valor previsto e realizado, o objeto e função de governo?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Série Histórica', status: 'check' },
+          { text: 'Gravação de Relatórios', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      },
+      {
+        criterion: '17.2 Identifica as emendas parlamentares estaduais e municipais, contendo informações sobre a origem, a forma de repasse, o tipo de emenda, o número da emenda, a autoria, o valor previsto e realizado, o objeto e função de governo?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Série Histórica', status: 'check' },
+          { text: 'Gravação de Relatórios', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      },
+      {
+        criterion: '17.3 Demonstra a execução orçamentária e financeira oriunda das emendas parlamentares recebidas e próprias?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Série Histórica', status: 'check' },
+          { text: 'Gravação de Relatórios', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      }
     ]
   },
   {
@@ -593,11 +780,51 @@ const cards = [
     icon: 'bi-heart-fill',
     tone: '#2f86de',
     features: [
-      'Disponibilidade',
-      'Atualidade',
-      'Série Histórica',
-      'Gravação de Relatórios',
-      'Filtro de Pesquisa'
+      {
+        criterion: '18.1 Divulga o plano de saúde, a programação anual e o relatório de gestão?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Série Histórica', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      },
+      {
+        criterion: '18.2 Divulga informações relacionadas aos serviços de saúde, indicando os horários, os profissionais prestadores de serviços, as especialidades e local?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      },
+      {
+        criterion: '18.3 Divulga a lista de espera de regulação para acesso às consultas, exames e serviços médicos?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '18.4 Divulga lista dos medicamentos a serem fornecidos pelo SUS e informações de como obter medicamentos, incluindo os de alto custo?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      },
+      {
+        criterion: '18.5 Divulga os estoques de medicamentos das farmácias públicas?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      },
+      {
+        criterion: '18.6 Divulga informações atualizadas sobre a composição e o funcionamento do Conselho de Saúde?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      }
     ]
   },
   {
@@ -606,16 +833,41 @@ const cards = [
     icon: 'bi-book-fill',
     tone: '#2f86de',
     features: [
-      'Disponibilidade',
-      'Atualidade',
-      'Série Histórica',
-      'Gravação de Relatórios',
-      'Filtro de Pesquisa'
+      {
+        criterion: '19.1 Divulga o plano de educação e o respectivo relatório de resultados?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' },
+          { text: 'Série Histórica', status: 'check' },
+          { text: 'Filtro de Pesquisa', status: 'check' }
+        ]
+      },
+      {
+        criterion: '19.2 Divulga a lista de espera em creches públicas e os critérios de priorização de acesso a elas?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' },
+          { text: 'Atualidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '19.3 Divulga informações atualizadas sobre a composição e o funcionamento do Conselho do Fundeb?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      },
+      {
+        criterion: '19.4 Divulga informações atualizadas sobre a composição e o funcionamento do Conselho de Assistência Social?',
+        subitems: [
+          { text: 'Disponibilidade', status: 'check' }
+        ]
+      }
     ]
   }
 ]
 
 function App() {
+  const [expandedCard, setExpandedCard] = useState(null)
+
   return (
     <div className="app-shell">
       <header className="site-header">
@@ -672,7 +924,7 @@ function App() {
       <main>
         <section className="cards-section">
           <div className="cards-grid container">
-            {cards.map((card) => (
+            {cards.map((card, index) => (
               <Card
                 key={card.title}
                 title={card.title}
@@ -680,6 +932,8 @@ function App() {
                 icon={card.icon}
                 tone={card.tone}
                 features={card.features}
+                isExpanded={expandedCard === index}
+                onToggle={() => setExpandedCard(expandedCard === index ? null : index)}
               />
             ))}
           </div>
