@@ -906,9 +906,18 @@ const cards = [
 
 function App() {
   const [expandedCard, setExpandedCard] = useState(null)
+  const [navOpen, setNavOpen] = useState(false)
 
   return (
     <div className="app-shell">
+      {navOpen && (
+        <div
+          className="nav-overlay"
+          onClick={() => setNavOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       <header className="site-header">
         <div className="topbar">
           <div className="container topbar__inner">
@@ -949,9 +958,17 @@ function App() {
 
         <nav className="navbar navbar-portal" aria-label="Navegação principal">
           <div className="container navbar-inner">
-            <div className="navbar-nav">
+            <button
+              className="hamburger"
+              aria-label={navOpen ? 'Fechar menu' : 'Abrir menu'}
+              aria-expanded={navOpen}
+              onClick={() => setNavOpen(v => !v)}
+            >
+              <i className={`bi ${navOpen ? 'bi-x-lg' : 'bi-list'}`} />
+            </button>
+            <div className={`navbar-nav${navOpen ? ' open' : ''}`}>
               {navItems.map((item) => (
-                <a key={item} className="nav-link" href="#">
+                <a key={item} className="nav-link" href="#" onClick={() => setNavOpen(false)}>
                   {item}
                 </a>
               ))}
