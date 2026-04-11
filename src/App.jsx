@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import Card from './Card.jsx'
 import { SkeletonList } from './Skeleton.jsx'
+import PrivacyModal from './PrivacyModal.jsx'
+import TermsModal from './TermsModal.jsx'
 import { supabase } from './lib/supabase.js'
 
 const topLinks = [
@@ -23,6 +25,8 @@ function App() {
   const [navOpen, setNavOpen]           = useState(false)
   const [categories, setCategories]     = useState([])
   const [loading, setLoading]           = useState(true)
+  const [privacyOpen, setPrivacyOpen]   = useState(false)
+  const [termsOpen, setTermsOpen]       = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -88,10 +92,10 @@ function App() {
               ))}
             </div>
             <div className="topbar__social social">
-              <a href="#"><i className="bi bi-instagram"></i></a>
-              <a href="#"><i className="bi bi-facebook"></i></a>
-              <a href="#"><i className="bi bi-youtube"></i></a>
-              <a href="#"><i className="bi bi-whatsapp"></i></a>
+              <a href="https://www.instagram.com/prefeituradeparintins?igsh=MTh1cjZheW52cmJw" target="_blank" rel="noreferrer"><i className="bi bi-instagram"></i></a>
+              <a href="https://www.facebook.com/PrefeituraOficialParintins/" target="_blank" rel="noreferrer"><i className="bi bi-facebook"></i></a>
+              <a href="https://www.youtube.com/@prefeituradeparintins" target="_blank" rel="noreferrer"><i className="bi bi-youtube"></i></a>
+              <a href="https://wa.me/5592982530066" target="_blank" rel="noreferrer"><i className="bi bi-whatsapp"></i></a>
             </div>
           </div>
         </div>
@@ -160,6 +164,9 @@ function App() {
         </section>
       </main>
 
+      {privacyOpen && <PrivacyModal onClose={() => setPrivacyOpen(false)} />}
+      {termsOpen   && <TermsModal   onClose={() => setTermsOpen(false)}   />}
+
       <footer className="site-footer">
         <div className="container footer-inner">
           <div>
@@ -167,9 +174,11 @@ function App() {
             <p>Aviso Importante: Este painel não constitui meio oficial de divulgação institucional. Seu conteúdo possui natureza meramente informativa, preliminar e não vinculante, razão pela qual não gera direitos, obrigações, efeitos legais ou presunção de veracidade oficial. Para fins formais, legais ou administrativos, deverão ser observados exclusivamente os canais oficiais de publicação do Município.</p>
           </div>
           <div className="footer-links">
-            <a href="#">Política de privacidade</a>
-            <a href="#">Termos de uso</a>
-            <a href="#">Fale conosco</a>
+            <button className="footer-link-btn" onClick={() => setPrivacyOpen(true)} type="button">Política de privacidade</button>
+            <button className="footer-link-btn" onClick={() => setTermsOpen(true)} type="button">Termos de uso</button>
+          </div>
+          <div className="footer-copy">
+            © 2026 <a href="https://asmdeveloper.com.br/" target="_blank" rel="noreferrer">ASMDEVELOPER</a>. Todos os direitos reservados.
           </div>
         </div>
       </footer>
