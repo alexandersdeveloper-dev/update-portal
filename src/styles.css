@@ -757,3 +757,64 @@ img {
     padding: 2.5rem 0;
   }
 }
+
+/* ─── Public loading state ─── */
+.public-loading {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 4rem 0;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.public-loading__spin {
+  font-size: 1.75rem;
+  color: #2f86de;
+  display: inline-block;
+  animation: pub-spin 0.7s linear infinite;
+}
+
+@keyframes pub-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Progress bar por card ─── */
+.card-progress {
+  margin: 0.1rem 0 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.card-progress__track {
+  height: 7px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.card-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+.card-progress__fill--green  { background: linear-gradient(90deg, #22c55e, #16a34a); }
+.card-progress__fill--yellow { background: linear-gradient(90deg, #fbbf24, #d97706); }
+.card-progress__fill--red    { background: linear-gradient(90deg, #f87171, #dc2626); }
+
+.card-progress__label {
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.card-progress__label--green  { color: #16a34a; }
+.card-progress__label--yellow { color: #d97706; }
+.card-progress__label--red    { color: #dc2626; }
