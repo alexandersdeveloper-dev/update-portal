@@ -818,3 +818,51 @@ img {
 .card-progress__label--green  { color: #16a34a; }
 .card-progress__label--yellow { color: #d97706; }
 .card-progress__label--red    { color: #dc2626; }
+
+/* ════════════════════════════════════════════════════════
+   SKELETON LOADING
+════════════════════════════════════════════════════════ */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skel {
+  background: linear-gradient(
+    90deg,
+    #dde3ec 0%,
+    #eef1f6 45%,
+    #dde3ec 90%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Card skeleton: mesmas dimensões do priority-card real, sem interatividade */
+.skel-card {
+  pointer-events: none;
+  user-select: none;
+  min-height: 118px;  /* altura colapsada do card real */
+}
+
+/* ─── Transição suave skeleton → conteúdo real ─── */
+.cards-grid--loading {
+  /* mantém dimensões enquanto carrega */
+}
+
+.cards-grid--loaded {
+  animation: fadeInUp 0.35s ease both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

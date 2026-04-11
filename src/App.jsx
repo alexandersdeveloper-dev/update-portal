@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Card from './Card.jsx'
+import { SkeletonList } from './Skeleton.jsx'
 import { supabase } from './lib/supabase.js'
 
 const topLinks = [
@@ -138,12 +139,9 @@ function App() {
 
       <main>
         <section className="cards-section">
-          <div className="cards-grid container">
+          <div className={`cards-grid container${loading ? ' cards-grid--loading' : ' cards-grid--loaded'}`}>
             {loading ? (
-              <div className="public-loading">
-                <i className="bi bi-arrow-repeat public-loading__spin" />
-                <span>Carregando dados...</span>
-              </div>
+              <SkeletonList count={7} />
             ) : (
               categories.map((cat, index) => (
                 <Card
