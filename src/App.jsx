@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Card from './Card.jsx'
 import { SkeletonList } from './Skeleton.jsx'
 import PrivacyModal from './PrivacyModal.jsx'
@@ -23,6 +23,23 @@ const navItems = [
 function App() {
   const [expandedCard, setExpandedCard] = useState(null)
   const [navOpen, setNavOpen]           = useState(false)
+  const navRef                          = useRef(null)
+
+  // Fecha o menu ao clicar fora do nav (sem overlay)
+  useEffect(() => {
+    if (!navOpen) return
+    function handleOutside(e) {
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setNavOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    document.addEventListener('touchstart', handleOutside, { passive: true })
+    return () => {
+      document.removeEventListener('mousedown', handleOutside)
+      document.removeEventListener('touchstart', handleOutside)
+    }
+  }, [navOpen])
   const [categories, setCategories]     = useState([])
   const [loading, setLoading]           = useState(true)
   const [privacyOpen, setPrivacyOpen]   = useState(false)
@@ -75,14 +92,6 @@ function App() {
 
   return (
     <div className="app-shell">
-      {navOpen && (
-        <div
-          className="nav-overlay"
-          onClick={() => setNavOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
       <header className="site-header">
         <div className="topbar">
           <div className="container topbar__inner">
@@ -120,7 +129,7 @@ function App() {
           </div>
         </div>
 
-        <nav className="navbar navbar-portal" aria-label="Navegação principal">
+        <nav className="navbar navbar-portal" aria-label="Navegação principal" ref={navRef}>
           <div className="container navbar-inner">
             <button
               className="hamburger"

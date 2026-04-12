@@ -249,12 +249,17 @@ img {
   box-shadow: 0 16px 40px rgba(11, 53, 114, 0.12);
   padding: 0.5rem 0.75rem 0.75rem;
   gap: 0.2rem;
-  z-index: 1010;
+  z-index: 1040;
   border-bottom: 1px solid rgba(11, 77, 161, 0.06);
 }
 
 .navbar-nav.open {
   display: flex;
+}
+
+/* Garante que os links dentro do dropdown recebam eventos de clique */
+.navbar-nav .nav-link {
+  pointer-events: auto;
 }
 
 .nav-link {
@@ -302,14 +307,6 @@ img {
   transform: scaleX(1);
 }
 
-/* Overlay para fechar o menu ao clicar fora */
-.nav-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1009;
-  background: transparent;
-  cursor: default;
-}
 
 /* ════════════════════════════════════════════════════════
    CARDS SECTION
