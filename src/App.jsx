@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import Card from './Card.jsx'
 import { SkeletonList } from './Skeleton.jsx'
 import { supabase } from './lib/supabase.js'
 
 function App() {
+  const location                        = useLocation()
   const [expandedCard, setExpandedCard] = useState(null)
   const [categories, setCategories]     = useState([])
   const [loading, setLoading]           = useState(true)
@@ -47,6 +49,18 @@ function App() {
 
       setCategories(sorted)
       setLoading(false)
+
+      // Expandir card vindo do Dashboard
+      const expandId = location.state?.expandCategoryId
+      if (expandId) {
+        const idx = sorted.findIndex(c => c.id === expandId)
+        if (idx !== -1) {
+          setExpandedCard(idx)
+          setTimeout(() => {
+            document.getElementById(`cat-${expandId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }, 150)
+        }
+      }
     }
 
     loadData()
@@ -60,16 +74,17 @@ function App() {
             <SkeletonList count={7} />
           ) : (
             categories.map((cat, index) => (
-              <Card
-                key={cat.id}
-                title={cat.title}
-                description={cat.description}
-                icon={cat.icon}
-                tone={cat.tone}
-                features={cat.features}
-                isExpanded={expandedCard === index}
-                onToggle={() => setExpandedCard(expandedCard === index ? null : index)}
-              />
+              <div key={cat.id} id={`cat-${cat.id}`}>
+                <Card
+                  title={cat.title}
+                  description={cat.description}
+                  icon={cat.icon}
+                  tone={cat.tone}
+                  features={cat.features}
+                  isExpanded={expandedCard === index}
+                  onToggle={() => setExpandedCard(expandedCard === index ? null : index)}
+                />
+              </div>
             ))
           )}
         </div>

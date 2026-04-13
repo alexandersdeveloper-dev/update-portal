@@ -49,3 +49,61 @@ export function SkeletonList({ count = 7 }) {
     </>
   )
 }
+
+// ─── Skeleton do Dashboard ─────────────────────────────────────────────────────
+export function SkeletonDashboard() {
+  return (
+    <div className="dash-section" aria-hidden="true">
+      <div className="container">
+
+        {/* Header */}
+        <div className="dash-header" style={{ marginBottom: '2rem' }}>
+          <Skel w="160px" h="2rem" r="8px" style={{ marginBottom: '0.6rem' }} />
+          <Skel w="340px" h="0.9rem" r="6px" />
+        </div>
+
+        {/* Stat cards */}
+        <div className="dash-stats" style={{ marginBottom: '2rem' }}>
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="dash-stat">
+              <Skel w="70px" h="2rem" r="6px" />
+              <Skel w="90px" h="0.75rem" r="4px" style={{ marginTop: '0.3rem' }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Por importância */}
+        <Skel w="120px" h="0.75rem" r="4px" style={{ marginBottom: '0.9rem' }} />
+        <div className="dash-imp-list" style={{ marginBottom: '1.75rem' }}>
+          {Array.from({ length: 3 }, (_, i) => (
+            <div key={i} className="dash-imp-card">
+              <div className="dash-imp-card__top">
+                <Skel w="90px" h="0.75rem" r="4px" />
+                <Skel w="50px" h="1.4rem" r="6px" />
+              </div>
+              <Skel w="100%" h="6px" r="999px" style={{ marginTop: '0.65rem' }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Por dimensão */}
+        <Skel w="100px" h="0.75rem" r="4px" style={{ marginBottom: '0.9rem' }} />
+        <div className="dash-dim-list">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div key={i} className="dash-dim-item--clickable" style={{ pointerEvents: 'none' }}>
+              <div className="dash-dim-item__header" style={{ marginBottom: '0.6rem' }}>
+                <div className="dash-dim-item__info">
+                  <Skel w="2.9rem" h="2.9rem" r="0.85rem" style={{ flexShrink: 0 }} />
+                  <Skel w={`${120 + i * 20}px`} h="0.9rem" r="6px" />
+                </div>
+                <Skel w="40px" h="0.9rem" r="4px" />
+              </div>
+              <Skel w="100%" h="6px" r="999px" />
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </div>
+  )
+}

@@ -12,6 +12,7 @@ const topLinks = [
 
 const navItems = [
   { label: 'Portal Transparência', to:   '/',              external: false },
+  { label: 'Dashboard',            to:   '/dashboard',    external: false },
   { label: 'Informações',          to:   '/informacoes',  external: false },
 ]
 
