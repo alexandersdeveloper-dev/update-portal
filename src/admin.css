@@ -514,9 +514,9 @@
   text-transform: uppercase;
 }
 
-.importance-chip--essencial   { background: rgba(124, 58, 237, 0.1); color: #7c3aed; }
-.importance-chip--obrigatoria { background: rgba(11, 77, 161, 0.1);  color: #0b4da1; }
-.importance-chip--recomendada { background: rgba(5, 150, 105, 0.1);  color: #059669; }
+.importance-chip--essencial   { background: rgba(5, 150, 105, 0.1);   color: #059669; }
+.importance-chip--obrigatoria { background: rgba(47, 134, 222, 0.12); color: #2f86de; }
+.importance-chip--recomendada { background: rgba(217, 119, 6, 0.1);   color: #b45309; }
 
 /* ─── Score badge ─── */
 .score-badge {

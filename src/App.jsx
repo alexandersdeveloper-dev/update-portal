@@ -5,6 +5,14 @@ import PrivacyModal from './PrivacyModal.jsx'
 import TermsModal from './TermsModal.jsx'
 import { supabase } from './lib/supabase.js'
 
+function getCookie(name) {
+  return document.cookie.split('; ').find(r => r.startsWith(name + '='))?.split('=')[1] ?? null
+}
+function setCookie(name, value, days = 365) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString()
+  document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`
+}
+
 const topLinks = [
   { label: 'Lei de Acesso à Informação', href: 'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12527.htm' },
   { label: 'Portal Transparência',       href: 'https://transparencia.parintins.am.gov.br/' },
@@ -24,6 +32,16 @@ function App() {
   const [expandedCard, setExpandedCard] = useState(null)
   const [navOpen, setNavOpen]           = useState(false)
   const navRef                          = useRef(null)
+  const [theme, setTheme] = useState(() => {
+    const saved = getCookie('preferred_theme') ?? 'light'
+    document.documentElement.dataset.theme = saved
+    return saved
+  })
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    setCookie('preferred_theme', theme)
+  }, [theme])
 
   // Fecha o menu ao clicar fora do nav (sem overlay)
   useEffect(() => {
@@ -74,6 +92,7 @@ function App() {
             .sort((a, b) => a.order - b.order)
             .map(crit => ({
               criterion: crit.text,
+              importance: crit.importance ?? null,
               subitems: (crit.subitems ?? [])
                 .sort((a, b) => a.order - b.order)
                 .map(sub => ({
@@ -105,6 +124,15 @@ function App() {
               <a href="https://www.facebook.com/PrefeituraOficialParintins/" target="_blank" rel="noreferrer"><i className="bi bi-facebook"></i></a>
               <a href="https://www.youtube.com/@prefeituradeparintins" target="_blank" rel="noreferrer"><i className="bi bi-youtube"></i></a>
               <a href="https://wa.me/5592982530066" target="_blank" rel="noreferrer"><i className="bi bi-whatsapp"></i></a>
+              <button
+                className="theme-toggle"
+                onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
+                aria-label={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
+                title={theme === 'light' ? 'Modo escuro' : 'Modo claro'}
+                type="button"
+              >
+                <i className={`bi ${theme === 'light' ? 'bi-moon-stars-fill' : 'bi-sun-fill'}`} />
+              </button>
             </div>
           </div>
         </div>

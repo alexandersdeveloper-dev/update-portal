@@ -7,15 +7,6 @@ function statusIcon(status) {
   return { icon: 'bi-circle',                                            color: '#cbd5e1' }
 }
 
-// Aggregate status for a criterion based on its subitems
-function criterionStatus(subitems) {
-  const statuses = subitems.map(s => s.status).filter(Boolean)
-  if (statuses.length === 0) return null
-  if (statuses.every(s => s === 'atendido' || s === 'nao_aplicavel')) return 'atendido'
-  if (statuses.some(s => s === 'nao_atendido')) return 'nao_atendido'
-  return 'parcial'
-}
-
 // Calculate progress percentage from all subitems across all features
 // atendido=1.0, parcial=0.5, nao_atendido=0.0; nao_aplicavel and null are excluded
 function calcProgress(features) {
@@ -88,11 +79,12 @@ function Card({ title, description, icon, tone, features, isExpanded, onToggle }
                 ) : (
                   <div className="feature-group">
                     <div className="feature-criterion">
-                      {(() => {
-                        const s = criterionStatus(feature.subitems ?? [])
-                        const { icon: ic, color } = statusIcon(s)
-                        return <i className={`bi ${ic}`} style={{ color }} />
-                      })()} {feature.criterion}
+                      {feature.criterion}
+                      {feature.importance && (
+                        <span className={`importance-chip importance-chip--${feature.importance}`}>
+                          {feature.importance === 'essencial' ? 'Essencial' : feature.importance === 'obrigatoria' ? 'Obrigatória' : 'Recomendada'}
+                        </span>
+                      )}
                     </div>
                     <ul className="feature-subitems">
                       {(feature.subitems ?? []).map((subitem, subIndex) => {

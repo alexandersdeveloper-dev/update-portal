@@ -35,31 +35,29 @@ function statusValue(status) {
 }
 
 function calcCategoryScore(category, responses) {
-  let sum = 0, count = 0
+  let weightedSum = 0, totalWeight = 0
   for (const crit of category.criteria ?? []) {
+    const weight = IMPORTANCE_LABEL[crit.importance]?.weight ?? 1
+    let critSum = 0, critCount = 0
     for (const sub of crit.subitems ?? []) {
       if (!sub.counts_for_score) continue
       const status = responses[sub.id]
       if (status === 'nao_aplicavel') continue
-      sum += statusValue(status)
-      count++
+      critSum += statusValue(status)
+      critCount++
     }
-  }
-  if (count === 0) return null
-  return Math.round((sum / count) * 100)
-}
-
-function calcOverallScore(categories, responses) {
-  let weightedSum = 0, totalWeight = 0
-  for (const cat of categories) {
-    const score = calcCategoryScore(cat, responses)
-    if (score === null) continue
-    const weight = IMPORTANCE_LABEL[cat.importance]?.weight ?? 1
-    weightedSum += score * weight
+    if (critCount === 0) continue
+    weightedSum += (critSum / critCount) * weight
     totalWeight += weight
   }
   if (totalWeight === 0) return null
-  return Math.round(weightedSum / totalWeight)
+  return Math.round((weightedSum / totalWeight) * 100)
+}
+
+function calcOverallScore(categories, responses) {
+  const scores = categories.map(c => calcCategoryScore(c, responses)).filter(s => s !== null)
+  if (scores.length === 0) return null
+  return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
 }
 
 function scoreColor(score) {
@@ -85,10 +83,26 @@ function ScorePanel({ categories, responses }) {
   const color = scoreColor(overall)
 
   const byImportance = ['essencial', 'obrigatoria', 'recomendada'].map(imp => {
-    const cats = categories.filter(c => c.importance === imp)
-    const scores = cats.map(c => calcCategoryScore(c, responses)).filter(s => s !== null)
-    const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
-    return { imp, label: IMPORTANCE_LABEL[imp].label, score: avg, count: cats.length }
+    let weightedSum = 0, totalWeight = 0, count = 0
+    for (const cat of categories) {
+      for (const crit of cat.criteria ?? []) {
+        if ((crit.importance ?? 'recomendada') !== imp) continue
+        count++
+        let critSum = 0, critCount = 0
+        for (const sub of crit.subitems ?? []) {
+          if (!sub.counts_for_score) continue
+          const status = responses[sub.id]
+          if (status === 'nao_aplicavel') continue
+          critSum += statusValue(status)
+          critCount++
+        }
+        if (critCount === 0) continue
+        weightedSum += critSum / critCount
+        totalWeight++
+      }
+    }
+    const avg = totalWeight > 0 ? Math.round((weightedSum / totalWeight) * 100) : null
+    return { imp, label: IMPORTANCE_LABEL[imp].label, score: avg, count }
   })
 
   return (
@@ -104,7 +118,7 @@ function ScorePanel({ categories, responses }) {
             <span className={`score-panel__item-score score-panel__item-score--${scoreColor(score)}`}>
               {score === null ? '—' : `${score}%`}
             </span>
-            <span className="score-panel__item-count">{count} {count === 1 ? 'categoria' : 'categorias'}</span>
+            <span className="score-panel__item-count">{count} {count === 1 ? 'critério' : 'critérios'}</span>
           </div>
         ))}
       </div>
@@ -242,13 +256,14 @@ function SubitemRow({ subitem, responses, onSave, saving, editMode, onRefresh })
 function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefresh }) {
   const [editing, setEditing] = useState(false)
   const [text, setText] = useState(criterion.text)
+  const [importance, setImportance] = useState(criterion.importance ?? 'recomendada')
   const [busy, setBusy] = useState(false)
 
   async function handleSave() {
     setBusy(true)
     const { error } = await supabase
       .from('criteria')
-      .update({ text })
+      .update({ text, importance })
       .eq('id', criterion.id)
     setBusy(false)
     if (!error) { setEditing(false); onRefresh() }
@@ -258,6 +273,7 @@ function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefr
   function handleCancel() {
     setEditing(false)
     setText(criterion.text)
+    setImportance(criterion.importance ?? 'recomendada')
   }
 
   async function handleDelete() {
@@ -297,6 +313,11 @@ function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefr
               rows={3}
               autoFocus
             />
+            <select className="edit-select" value={importance} onChange={e => setImportance(e.target.value)}>
+              {IMPORTANCE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
             <div className="edit-actions">
               <button className="edit-btn edit-btn--save" onClick={handleSave} disabled={busy} type="button">
                 {busy ? <i className="bi bi-arrow-repeat admin-spin" /> : <i className="bi bi-check-lg" />}
@@ -310,6 +331,9 @@ function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefr
         ) : (
           <>
             <span>{criterion.text.replace(/^\d+\.\d+\s*/, '')}</span>
+            <span className={`importance-chip importance-chip--${criterion.importance ?? 'recomendada'}`}>
+              {IMPORTANCE_LABEL[criterion.importance ?? 'recomendada']?.label}
+            </span>
             {editMode && (
               <span className="inline-edit-actions inline-edit-actions--inline">
                 <button className="icon-btn icon-btn--edit" onClick={() => setEditing(true)} title="Editar critério" type="button">
@@ -350,18 +374,16 @@ function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefr
 function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, onToggle, editMode, onRefresh }) {
   const [editingMeta, setEditingMeta] = useState(false)
   const [name, setName] = useState(category.name)
-  const [importance, setImportance] = useState(category.importance)
   const [icon, setIcon] = useState(category.icon)
   const [busy, setBusy] = useState(false)
 
   const score = calcCategoryScore(category, responses)
-  const imp = IMPORTANCE_LABEL[category.importance]
 
   async function handleSaveMeta() {
     setBusy(true)
     const { error } = await supabase
       .from('categories')
-      .update({ name, importance, icon })
+      .update({ name, icon })
       .eq('id', category.id)
     setBusy(false)
     if (!error) { setEditingMeta(false); onRefresh() }
@@ -371,7 +393,6 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
   function handleCancelMeta() {
     setEditingMeta(false)
     setName(category.name)
-    setImportance(category.importance)
     setIcon(category.icon)
   }
 
@@ -398,6 +419,7 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
       category_id: category.id,
       code,
       text: `${code} Novo critério`,
+      importance: 'recomendada',
       order: maxOrder + 1,
     })
     if (!error) onRefresh()
@@ -414,14 +436,6 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
             <div className="edit-form-row">
               <label className="edit-label">Nome da categoria</label>
               <input className="edit-input" value={name} onChange={e => setName(e.target.value)} autoFocus />
-            </div>
-            <div className="edit-form-row">
-              <label className="edit-label">Importância</label>
-              <select className="edit-select" value={importance} onChange={e => setImportance(e.target.value)}>
-                {IMPORTANCE_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
             </div>
             <div className="edit-form-row">
               <label className="edit-label">Ícone Bootstrap</label>
@@ -451,9 +465,6 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
               </div>
               <div className="admin-card__titles">
                 <h3 className="admin-card__name">{category.name}</h3>
-                <span className={`importance-chip importance-chip--${category.importance}`}>
-                  {imp?.label}
-                </span>
               </div>
             </div>
             <div className="admin-card__header-right">
@@ -571,7 +582,6 @@ export default function Admin() {
     const maxOrder = Math.max(0, ...categories.map(c => c.order ?? 0))
     const { error } = await supabase.from('categories').insert({
       name: 'Nova categoria',
-      importance: 'recomendada',
       icon: 'bi-folder',
       tone: '#2f86de',
       order: maxOrder + 1,
