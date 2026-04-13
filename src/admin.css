@@ -7,55 +7,108 @@
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at top left, rgba(47, 134, 222, 0.12), transparent 40%),
-    radial-gradient(circle at bottom right, rgba(255, 191, 63, 0.1), transparent 40%),
-    #f4f7fb;
+    radial-gradient(circle at top left,  rgba(47, 134, 222, 0.1), transparent 40%),
+    radial-gradient(circle at bottom right, rgba(255, 191, 63, 0.08), transparent 40%),
+    #f0f4fa;
   padding: 1.5rem;
 }
 
 .login-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   background: #fff;
-  border-radius: 24px;
-  padding: 2.5rem 2rem;
-  box-shadow: 0 24px 60px rgba(11, 53, 114, 0.12);
-  border: 1px solid rgba(217, 227, 239, 0.8);
-  text-align: center;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(11, 53, 114, 0.08), 0 1px 4px rgba(11, 53, 114, 0.05);
+  border: 1px solid #e4eaf3;
+  overflow: hidden;
+}
+
+/* ─── Cabeçalho com identidade do portal ─── */
+.login-card__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.25rem 1.75rem;
+  background: #f4f7fb;
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(to right, #2f86de 25%, #c47b36 25% 50%, #ffbf3f 50% 75%, #ef6a4c 75%) 1;
+  border-bottom: 1px solid #e4eaf3;
+}
+
+.login-card__logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.login-card__brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.login-card__portal-name {
+  font-family: 'Sora', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f2544;
+  line-height: 1.2;
+}
+
+.login-card__portal-sub {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #7a8faa;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Área do formulário ─── */
+.login-card__body {
+  padding: 1.75rem 1.75rem 1.5rem;
+}
+
+.login-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.75rem;
 }
 
 .login-card__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 4rem;
-  height: 4rem;
-  border-radius: 1.25rem;
-  background: linear-gradient(135deg, #0b4da1, #2f86de);
-  color: #fff;
-  font-size: 1.75rem;
-  margin-bottom: 1.25rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  background: rgba(47, 134, 222, 0.08);
+  color: #2f86de;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .login-card__title {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.2rem;
   font-family: 'Sora', sans-serif;
-  font-size: 1.4rem;
+  font-size: 1rem;
   font-weight: 800;
-  color: var(--color-text);
+  color: #0f2544;
+  line-height: 1.2;
 }
 
 .login-card__subtitle {
-  margin: 0 0 2rem;
-  color: var(--color-muted);
-  font-size: 0.88rem;
+  margin: 0;
+  color: #7a8faa;
+  font-size: 0.76rem;
+  line-height: 1.4;
 }
 
+/* ─── Formulário ─── */
 .login-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  text-align: left;
 }
 
 .login-field {
@@ -65,68 +118,115 @@
 }
 
 .login-field label {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--color-text);
+  letter-spacing: 0.01em;
+}
+
+.login-field__input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-field__icon {
+  position: absolute;
+  left: 0.85rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  pointer-events: none;
 }
 
 .login-field input {
-  padding: 0.75rem 1rem;
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.4rem;
   border: 1.5px solid var(--color-border);
   border-radius: 10px;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-family: inherit;
   color: var(--color-text);
-  background: #fff;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background: #f8fafc;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   outline: none;
+  box-sizing: border-box;
 }
 
 .login-field input:focus {
-  border-color: var(--color-secondary);
+  border-color: #2f86de;
+  background: #fff;
   box-shadow: 0 0 0 3px rgba(47, 134, 222, 0.12);
 }
 
+/* ─── Erro ─── */
 .login-error {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.65rem 0.9rem;
   border-radius: 8px;
-  background: rgba(220, 53, 69, 0.08);
+  background: rgba(220, 53, 69, 0.07);
   border: 1px solid rgba(220, 53, 69, 0.2);
   color: #dc3545;
-  font-size: 0.85rem;
+  font-size: 0.83rem;
 }
 
+/* ─── Botão entrar ─── */
 .login-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.85rem;
-  margin-top: 0.5rem;
-  background: linear-gradient(135deg, #0b4da1, #2f86de);
+  padding: 0.8rem 1rem;
+  margin-top: 0.25rem;
+  background: #0b4da1;
   color: #fff;
   border: none;
-  border-radius: 10px;
-  font-size: 0.95rem;
+  border-radius: 9px;
+  font-size: 0.9rem;
   font-weight: 700;
   font-family: inherit;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.15s ease;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 1px 4px rgba(11, 77, 161, 0.18);
 }
 
 .login-btn:hover:not(:disabled) {
-  opacity: 0.92;
-  transform: translateY(-1px);
+  background: #083d82;
+  box-shadow: 0 2px 8px rgba(11, 77, 161, 0.24);
+}
+
+.login-btn:active:not(:disabled) {
+  background: #062f64;
+  box-shadow: none;
 }
 
 .login-btn:disabled {
-  opacity: 0.65;
+  opacity: 0.55;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
+/* ─── Link voltar ─── */
+.login-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1.25rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.login-back:hover {
+  color: #2f86de;
+}
+
+/* ─── Animações ─── */
 .login-spin,
 .admin-spin {
   display: inline-block;

@@ -152,7 +152,7 @@ function App() {
 
       <main>
         <section className="cards-section">
-          <div className={`cards-grid container${loading ? ' cards-grid--loading' : ' cards-grid--loaded'}`}>
+<div className={`cards-grid container${loading ? ' cards-grid--loading' : ' cards-grid--loaded'}`}>
             {loading ? (
               <SkeletonList count={7} />
             ) : (
