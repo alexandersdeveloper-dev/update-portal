@@ -397,7 +397,7 @@
   flex: 1;
 }
 
-.score-panel__item--essencial   { border-left: 3px solid #7c3aed; }
+.score-panel__item--essencial   { border-left: 3px solid #dc2626; }
 .score-panel__item--obrigatoria { border-left: 3px solid #0b4da1; }
 .score-panel__item--recomendada { border-left: 3px solid #059669; }
 
@@ -514,9 +514,9 @@
   text-transform: uppercase;
 }
 
-.importance-chip--essencial   { background: rgba(5, 150, 105, 0.1);   color: #059669; }
+.importance-chip--essencial   { background: rgba(220, 38, 38, 0.1);   color: #dc2626; }
 .importance-chip--obrigatoria { background: rgba(47, 134, 222, 0.12); color: #2f86de; }
-.importance-chip--recomendada { background: rgba(217, 119, 6, 0.1);   color: #b45309; }
+.importance-chip--recomendada { background: rgba(5, 150, 105, 0.1);   color: #059669; }
 
 /* ─── Score badge ─── */
 .score-badge {

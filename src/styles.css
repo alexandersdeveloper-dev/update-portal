@@ -529,9 +529,9 @@ img {
   white-space: nowrap;
 }
 
-.importance-chip--essencial   { background: rgba(5, 150, 105, 0.1);   color: #059669; }
+.importance-chip--essencial   { background: rgba(220, 38, 38, 0.1);   color: #dc2626; }
 .importance-chip--obrigatoria { background: rgba(47, 134, 222, 0.12); color: #2f86de; }
-.importance-chip--recomendada { background: rgba(217, 119, 6, 0.1);   color: #b45309; }
+.importance-chip--recomendada { background: rgba(5, 150, 105, 0.1);   color: #059669; }
 
 .feature-criterion i {
   margin-right: 0.3rem;
@@ -1166,12 +1166,21 @@ img {
 
 [data-theme="dark"] .navbar-portal {
   background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
 }
 
+/* Mobile: dropdown aberto precisa de fundo legível */
 [data-theme="dark"] .navbar-nav {
-  background: #0d1520;
-  border-top-color: rgba(47, 134, 222, 0.25);
-  border-bottom-color: rgba(47, 134, 222, 0.08);
+  background: rgba(13, 21, 32, 0.99);
+  border-bottom-color: rgba(47, 134, 222, 0.06);
+}
+
+/* Desktop: nav horizontal sem fundo */
+@media (min-width: 960px) {
+  [data-theme="dark"] .navbar-nav {
+    background: transparent;
+  }
 }
 
 [data-theme="dark"] .nav-link { color: rgba(200, 218, 240, 0.85); }
