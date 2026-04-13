@@ -1169,8 +1169,9 @@ img {
 }
 
 [data-theme="dark"] .navbar-nav {
-  background: transparent;
-  border-bottom-color: rgba(47, 134, 222, 0.06);
+  background: #0d1520;
+  border-top-color: rgba(47, 134, 222, 0.25);
+  border-bottom-color: rgba(47, 134, 222, 0.08);
 }
 
 [data-theme="dark"] .nav-link { color: rgba(200, 218, 240, 0.85); }
