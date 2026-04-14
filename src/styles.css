@@ -871,6 +871,12 @@ img {
   gap: 0.5rem;
 }
 
+.card-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .card-date {
   font-size: 0.68rem;
   color: var(--muted, #94a3b8);
@@ -909,12 +915,16 @@ img {
   cursor: pointer;
   color: var(--muted, #94a3b8);
   font-size: 0.68rem;
-  padding: 0.2rem 0.3rem;
+  padding: 0;
+  margin: 0;
   display: flex;
   align-items: center;
   line-height: 1;
   transition: color 0.15s;
   border-radius: 4px;
+  vertical-align: middle;
+  position: relative;
+  top: 1.2px;
 }
 
 .obs-popover-btn:hover {

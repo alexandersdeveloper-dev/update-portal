@@ -205,12 +205,14 @@ function CardFooter({ title, description, features, lastUpdate, observation, ton
 
   return (
     <div className="card-footer-row">
-      {lastUpdate && (
-        <span className="card-date">
-          <i className="bi bi-clock" /> {formatCardDate(lastUpdate)}
-        </span>
-      )}
-      {observation && <ObservationTrigger text={observation} title={title} />}
+      <div className="card-footer-left">
+        {lastUpdate && (
+          <span className="card-date">
+            <i className="bi bi-clock" /> {formatCardDate(lastUpdate)}
+          </span>
+        )}
+        {observation && <ObservationTrigger text={observation} title={title} />}
+      </div>
       <button
         className="card-share-btn"
         type="button"
