@@ -571,12 +571,11 @@ img {
 ════════════════════════════════════════════════════════ */
 .priority-card__features {
   margin: 0.85rem 0 0;
+  padding: 0;
   list-style: none;
 }
 
 .priority-card__features > li {
-  position: relative;
-  padding-left: 1.4rem;
   color: var(--color-muted);
   line-height: 1.6;
   font-size: 0.87rem;
@@ -587,9 +586,6 @@ img {
 }
 
 .priority-card__features > li > i {
-  position: absolute;
-  left: 0;
-  top: 0.18rem;
   color: var(--tone);
   font-size: 0.9rem;
 }
@@ -639,7 +635,8 @@ img {
 }
 
 .feature-subitems {
-  margin: 0 0 0.2rem 0.65rem;
+  margin: 0 0 0.2rem 0;
+  padding-left: 0.75rem;
   list-style: none;
 }
 
