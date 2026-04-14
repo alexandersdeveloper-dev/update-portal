@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { pdf } from '@react-pdf/renderer'
 import { CategoryPDFDocument } from './CategoryPDF.jsx'
 
@@ -61,7 +62,53 @@ function formatCardDate(iso) {
   }).format(new Date(iso))
 }
 
-function Card({ title, description, icon, tone, features, lastUpdate, isExpanded, onToggle }) {
+function ObservationModal({ text, title, onClose }) {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  return createPortal(
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Observação">
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">{title}</h2>
+          <p className="modal-subtitle">Observação interna</p>
+          <button className="modal-close" onClick={onClose} type="button" aria-label="Fechar">
+            <i className="bi bi-x-lg" />
+          </button>
+        </div>
+        <div className="modal-body">
+          <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>{text}</p>
+        </div>
+        <div className="modal-footer">
+          <button className="modal-btn-close" onClick={onClose} type="button">Fechar</button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+function ObservationTrigger({ text, title }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <button
+        className="obs-popover-btn"
+        type="button"
+        aria-label="Ver observação"
+        onClick={() => setOpen(true)}
+      >
+        <i className="bi bi-info-circle" />
+      </button>
+      {open && <ObservationModal text={text} title={title} onClose={() => setOpen(false)} />}
+    </>
+  )
+}
+
+function Card({ title, description, icon, tone, features, lastUpdate, observation, isExpanded, onToggle }) {
   return (
     <article className="priority-card" style={{ '--tone': tone }}>
       <div className="priority-card__header">
@@ -113,21 +160,20 @@ function Card({ title, description, icon, tone, features, lastUpdate, isExpanded
             ))}
           </ul>
         )}
-        {lastUpdate && (
-          <CardFooter
-            title={title}
-            description={description}
-            features={features}
-            lastUpdate={lastUpdate}
-            tone={tone}
-          />
-        )}
+        <CardFooter
+          title={title}
+          description={description}
+          features={features}
+          lastUpdate={lastUpdate}
+          observation={observation}
+          tone={tone}
+        />
       </div>
     </article>
   )
 }
 
-function CardFooter({ title, description, features, lastUpdate, tone }) {
+function CardFooter({ title, description, features, lastUpdate, observation, tone }) {
   const [downloading, setDownloading] = useState(false)
   const [done, setDone]               = useState(false)
 
@@ -159,9 +205,12 @@ function CardFooter({ title, description, features, lastUpdate, tone }) {
 
   return (
     <div className="card-footer-row">
-      <span className="card-date">
-        <i className="bi bi-clock" /> {formatCardDate(lastUpdate)}
-      </span>
+      {lastUpdate && (
+        <span className="card-date">
+          <i className="bi bi-clock" /> {formatCardDate(lastUpdate)}
+        </span>
+      )}
+      {observation && <ObservationTrigger text={observation} title={title} />}
       <button
         className="card-share-btn"
         type="button"

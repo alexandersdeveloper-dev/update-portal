@@ -371,10 +371,12 @@ function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefr
 
 // ─── Category Card ────────────────────────────────────────────────────────────
 
-function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, onToggle, editMode, onRefresh }) {
+function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, onToggle, editMode, onRefresh, onToast }) {
   const [editingMeta, setEditingMeta] = useState(false)
   const [name, setName] = useState(category.name)
   const [icon, setIcon] = useState(category.icon)
+  const [observation, setObservation] = useState(category.observation ?? '')
+  const [savingObs, setSavingObs] = useState(false)
   const [busy, setBusy] = useState(false)
 
   const score = calcCategoryScore(category, responses)
@@ -394,6 +396,7 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
     setEditingMeta(false)
     setName(category.name)
     setIcon(category.icon)
+    setObservation(category.observation ?? '')
   }
 
   async function handleDeleteCategory() {
@@ -409,6 +412,17 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
     setBusy(false)
     if (!error) onRefresh()
     else alert('Erro ao excluir: ' + error.message)
+  }
+
+  async function handleSaveObservation() {
+    setSavingObs(true)
+    const { error } = await supabase
+      .from('categories')
+      .update({ observation: observation || null })
+      .eq('id', category.id)
+    setSavingObs(false)
+    if (!error) onToast('Observação salva com sucesso.')
+    else onToast('Erro ao salvar observação.', 'error')
   }
 
   async function handleAddCriterion() {
@@ -443,6 +457,16 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
                 <i className={`bi ${icon} edit-icon-preview`} />
                 <input className="edit-input" value={icon} onChange={e => setIcon(e.target.value)} placeholder="ex: bi-building" />
               </div>
+            </div>
+            <div className="edit-form-row">
+              <label className="edit-label">Observação</label>
+              <textarea
+                className="edit-input edit-textarea"
+                value={observation}
+                onChange={e => setObservation(e.target.value)}
+                rows={3}
+                placeholder="Texto interno visível no painel público como aviso..."
+              />
             </div>
             <div className="edit-actions">
               <button className="edit-btn edit-btn--save" onClick={handleSaveMeta} disabled={busy} type="button">
@@ -489,6 +513,28 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
       {/* Expanded content */}
       {isExpanded && (
         <div className="admin-card__content">
+          <div className="obs-field">
+            <label className="obs-field__label">
+              <i className="bi bi-info-circle" /> Observação interna
+            </label>
+            <textarea
+              className="obs-field__input"
+              value={observation}
+              onChange={e => setObservation(e.target.value)}
+              rows={3}
+              placeholder="Descreva a situação desta categoria para o chefe..."
+            />
+            <button
+              className="obs-field__save"
+              type="button"
+              onClick={handleSaveObservation}
+              disabled={savingObs}
+            >
+              {savingObs
+                ? <><i className="bi bi-arrow-repeat admin-spin" /> Salvando...</>
+                : <><i className="bi bi-check-lg" /> Salvar observação</>}
+            </button>
+          </div>
           {(category.criteria ?? []).map(crit => (
             <CriterionBlock
               key={crit.id}
@@ -526,6 +572,12 @@ export default function Admin() {
   const [expandedCard, setExpandedCard] = useState(null)
   const [saving, setSaving]             = useState(null)
   const [editMode, setEditMode]         = useState(false)
+  const [toast, setToast]               = useState(null)
+
+  function showToast(message, type = 'success') {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3000)
+  }
 
   useEffect(() => {
     if (!authLoading && !session) navigate('/login')
@@ -618,6 +670,12 @@ export default function Admin() {
 
   return (
     <div className="app-shell">
+      {toast && (
+        <div className={`admin-toast admin-toast--${toast.type}`}>
+          <i className={`bi ${toast.type === 'error' ? 'bi-x-circle-fill' : 'bi-check-circle-fill'}`} />
+          {toast.message}
+        </div>
+      )}
       <div className="admin-topbar">
         <div className="container admin-topbar__inner">
           <div className="admin-topbar__left">
@@ -667,6 +725,7 @@ export default function Admin() {
                 onToggle={() => setExpandedCard(expandedCard === i ? null : i)}
                 editMode={editMode}
                 onRefresh={fetchData}
+                onToast={showToast}
               />
             ))}
           </div>

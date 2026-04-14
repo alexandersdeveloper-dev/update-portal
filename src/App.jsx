@@ -140,6 +140,7 @@ function App() {
             description: cat.description ?? '',
             icon:        cat.icon,
             tone:        cat.tone,
+            observation: cat.observation ?? null,
             lastUpdate,
             features: (cat.criteria ?? [])
               .sort((a, b) => a.order - b.order)
@@ -204,6 +205,7 @@ function App() {
                     tone={cat.tone}
                     features={cat.features}
                     lastUpdate={cat.lastUpdate}
+                    observation={cat.observation}
                     isExpanded={hasQuery || expandedCard === index}
                     onToggle={() => setExpandedCard(expandedCard === index ? null : index)}
                   />
