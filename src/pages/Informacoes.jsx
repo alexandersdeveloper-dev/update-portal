@@ -74,6 +74,39 @@ export default function Informacoes() {
             ))}
           </div>
 
+          <div className="info-header" style={{ marginTop: '2.5rem' }}>
+            <h1 className="info-title">Critérios de Avaliação</h1>
+          </div>
+
+          <div className="info-list">
+            <div className="info-card info-card--essencial">
+              <div className="info-card__header">
+                <span className="importance-chip importance-chip--essencial">Essencial</span>
+              </div>
+              <p className="info-card__texto">
+                Os critérios classificados como "essenciais" são aqueles referentes a informações da execução orçamentária e financeira que se o Poder ou órgão deixar de dar transparência, fica impedido de receber transferências voluntárias e contratar operações de crédito, de acordo com os arts. 48 e 48-A c/c o art. 51 da Lei Complementar nº 101/2000.
+              </p>
+            </div>
+
+            <div className="info-card info-card--obrigatoria">
+              <div className="info-card__header">
+                <span className="importance-chip importance-chip--obrigatoria">Obrigatório</span>
+              </div>
+              <p className="info-card__texto">
+                Os critérios classificados como "obrigatórios" são aqueles cujo dever de divulgação na internet está explicitamente prevista em leis e atos normativos.
+              </p>
+            </div>
+
+            <div className="info-card info-card--recomendada">
+              <div className="info-card__header">
+                <span className="importance-chip importance-chip--recomendada">Recomendado</span>
+              </div>
+              <p className="info-card__texto">
+                Já os "recomendados" são informações importantes para o público em geral, que, apesar de não constarem expressamente como exigíveis na legislação, são boas práticas que devem ser estimuladas.
+              </p>
+            </div>
+          </div>
+
         </div>
       </section>
     </main>

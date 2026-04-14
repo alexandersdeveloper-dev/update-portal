@@ -1,3 +1,7 @@
+import { useState } from 'react'
+import { pdf } from '@react-pdf/renderer'
+import { CategoryPDFDocument } from './CategoryPDF.jsx'
+
 // Status → icon + color
 function statusIcon(status) {
   if (status === 'atendido')      return { icon: 'bi-check-circle-fill', color: '#16a34a' }
@@ -50,7 +54,14 @@ function ProgressBar({ features }) {
   )
 }
 
-function Card({ title, description, icon, tone, features, isExpanded, onToggle }) {
+function formatCardDate(iso) {
+  if (!iso) return null
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+  }).format(new Date(iso))
+}
+
+function Card({ title, description, icon, tone, features, lastUpdate, isExpanded, onToggle }) {
   return (
     <article className="priority-card" style={{ '--tone': tone }}>
       <div className="priority-card__header">
@@ -102,8 +113,66 @@ function Card({ title, description, icon, tone, features, isExpanded, onToggle }
             ))}
           </ul>
         )}
+        {lastUpdate && (
+          <CardFooter
+            title={title}
+            description={description}
+            features={features}
+            lastUpdate={lastUpdate}
+            tone={tone}
+          />
+        )}
       </div>
     </article>
+  )
+}
+
+function CardFooter({ title, description, features, lastUpdate, tone }) {
+  const [downloading, setDownloading] = useState(false)
+  const [done, setDone]               = useState(false)
+
+  async function handleExport() {
+    if (downloading) return
+    setDownloading(true)
+    try {
+      const blob = await pdf(
+        <CategoryPDFDocument
+          title={title}
+          description={description}
+          features={features}
+          lastUpdate={lastUpdate}
+          tone={tone}
+        />
+      ).toBlob()
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href     = url
+      a.download = `${title.toLowerCase().replace(/\s+/g, '-')}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+      setDone(true)
+      setTimeout(() => setDone(false), 2000)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div className="card-footer-row">
+      <span className="card-date">
+        <i className="bi bi-clock" /> {formatCardDate(lastUpdate)}
+      </span>
+      <button
+        className="card-share-btn"
+        type="button"
+        title="Exportar PDF"
+        aria-label="Exportar PDF"
+        onClick={handleExport}
+        disabled={downloading}
+      >
+        <i className={`bi ${done ? 'bi-check-lg' : downloading ? 'bi-hourglass-split' : 'bi-share'}`} />
+      </button>
+    </div>
   )
 }
 
