@@ -1420,6 +1420,7 @@ img {
 
 /* ── Por importância ── */
 .dash-importance {
+  margin-top: 1.75rem;
   margin-bottom: 1.75rem;
 }
 
@@ -1471,6 +1472,44 @@ img {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* ── Scroll reveal ── */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+[data-reveal].reveal--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Itens de verificação ── */
+.dash-verif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 0.9rem;
+}
+
+.dash-verif-counts {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dash-verif-count {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.dash-verif-count--green  { color: #16a34a; }
+.dash-verif-count--yellow { color: #d97706; }
+.dash-verif-count--red    { color: #dc2626; }
 
 /* ── Dimensão clicável ── */
 .dash-dim-item--clickable {

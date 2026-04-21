@@ -101,6 +101,7 @@ function SearchBar({ value, onChange, total, visible }) {
   )
 }
 
+
 function App() {
   const location                        = useLocation()
   const [expandedCard, setExpandedCard] = useState(null)
@@ -126,6 +127,7 @@ function App() {
         respMap[r.subitem_id] = r.status
         if (r.updated_at) updatedAtMap[r.subitem_id] = r.updated_at
       })
+
 
       const sorted = catResult.data
         .sort((a, b) => a.order - b.order)

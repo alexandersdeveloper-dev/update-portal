@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { SkeletonDashboard } from '../Skeleton.jsx'
 import Card from '../Card.jsx'
+import { useScrollReveal } from '../hooks/useScrollReveal.js'
 
 const IMPORTANCE_WEIGHT = { essencial: 2, obrigatoria: 1.5, recomendada: 1 }
 
@@ -69,6 +70,48 @@ function scoreColor(score) {
   if (score >= 80)   return 'green'
   if (score >= 50)   return 'yellow'
   return 'red'
+}
+
+const VERIFICATION_ITEMS = [
+  { key: 'disponibilidade',    label: 'Disponibilidade',       icon: 'bi-eye'              },
+  { key: 'atualidade',         label: 'Atualidade',            icon: 'bi-calendar-check'   },
+  { key: 'serie_historica',    label: 'Série Histórica',       icon: 'bi-clock-history'    },
+  { key: 'gravacao',           label: 'Gravação de Relatórios',icon: 'bi-download'         },
+  { key: 'filtro',             label: 'Filtro de Pesquisa',    icon: 'bi-funnel'           },
+]
+
+const VERIFICATION_MATCH = {
+  disponibilidade: ['disponibilidade'],
+  atualidade:      ['atualidade'],
+  serie_historica: ['série histórica', 'serie historica', 'série historica', 'serie histórica'],
+  gravacao:        ['gravação', 'gravacao', 'relatório', 'relatorio'],
+  filtro:          ['filtro'],
+}
+
+function countVerificationItems(categories, responses) {
+  const result = {}
+  for (const item of VERIFICATION_ITEMS) {
+    result[item.key] = { atendido: 0, parcial: 0, nao_atendido: 0, total: 0 }
+  }
+  for (const cat of categories) {
+    for (const crit of cat.criteria ?? []) {
+      for (const sub of crit.subitems ?? []) {
+        const label = (sub.label ?? '').toLowerCase()
+        for (const item of VERIFICATION_ITEMS) {
+          const matches = VERIFICATION_MATCH[item.key]
+          if (matches.some(m => label.includes(m))) {
+            const s = responses[sub.id]
+            if (s === 'nao_aplicavel' || !s) continue
+            result[item.key].total++
+            if (s === 'atendido')     result[item.key].atendido++
+            else if (s === 'parcial') result[item.key].parcial++
+            else                      result[item.key].nao_atendido++
+          }
+        }
+      }
+    }
+  }
+  return result
 }
 
 function countStatuses(categories, responses) {
@@ -142,6 +185,7 @@ export default function Dashboard() {
   const [lastUpdate, setLastUpdate] = useState(null)
   const [loading, setLoading]       = useState(true)
   const [selectedCat, setSelectedCat] = useState(null)
+  useScrollReveal(!loading)
 
   useEffect(() => {
     async function load() {
@@ -180,6 +224,7 @@ export default function Dashboard() {
   const overall      = calcOverallScore(categories, responses)
   const overallColor = scoreColor(overall)
   const counts       = countStatuses(categories, responses)
+  const verifCounts  = countVerificationItems(categories, responses)
 
   const worst3 = [...categories]
     .map(cat => ({ cat, score: calcCategoryScore(cat, responses) }))
@@ -193,7 +238,7 @@ export default function Dashboard() {
         <div className="container">
 
           {/* ── Header ── */}
-          <div className="dash-header">
+          <div className="dash-header" data-reveal>
             <h1 className="dash-title">Dashboard</h1>
             <div className="dash-header__meta">
               <p className="dash-subtitle">Visão geral do índice de transparência do Município de Parintins.</p>
@@ -206,7 +251,7 @@ export default function Dashboard() {
           </div>
 
           {/* ── Stat cards ── */}
-          <div className="dash-stats">
+          <div className="dash-stats" data-reveal data-reveal-delay="100">
             <div className={`dash-stat dash-stat--overall dash-stat--${overallColor}`}>
               <span className="dash-stat__number">{overall === null ? '—' : `${overall}%`}</span>
               <span className="dash-stat__label">Índice Geral</span>
@@ -226,7 +271,7 @@ export default function Dashboard() {
           </div>
 
           {/* ── Por importância ── */}
-          <div className="dash-importance">
+          <div className="dash-importance" data-reveal data-reveal-delay="150">
             <h2 className="dash-section-title">Por Importância</h2>
             <div className="dash-imp-list">
               {['essencial', 'obrigatoria', 'recomendada'].map(imp => {
@@ -262,7 +307,7 @@ export default function Dashboard() {
               .slice(0, 3)
             if (top3.length === 0) return null
             return (
-              <div className="dash-importance">
+              <div className="dash-importance" data-reveal data-reveal-delay="150">
                 <h2 className="dash-section-title">Bem Avaliado</h2>
                 <div className="dash-imp-list">
                   {top3.map(({ cat, score }) => {
@@ -297,7 +342,7 @@ export default function Dashboard() {
 
           {/* ── Piores dimensões ── */}
           {worst3.length > 0 && (
-            <div className="dash-worst">
+            <div className="dash-worst" data-reveal data-reveal-delay="150">
               <h2 className="dash-section-title">Dimensões que precisam de atenção</h2>
               <div className="dash-worst__list">
                 {worst3.map(({ cat, score }) => (
@@ -324,6 +369,45 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
+          {/* ── Itens de verificação ── */}
+          <div className="dash-importance" data-reveal data-reveal-delay="150">
+            <h2 className="dash-section-title">Itens de Verificação</h2>
+            <div className="dash-verif-list">
+              {VERIFICATION_ITEMS.map(item => {
+                const c   = verifCounts[item.key]
+                const pct = c.total > 0 ? Math.round((c.atendido / c.total) * 100) : null
+                const color = scoreColor(pct)
+                return (
+                  <div key={item.key} className="dash-imp-card">
+                    <div className="dash-imp-card__top">
+                      <span className="dash-imp-card__label">{item.label}</span>
+                      <span className={`dash-imp-card__score dash-imp-card__score--${color}`}>
+                        {pct === null ? '—' : `${pct}%`}
+                      </span>
+                    </div>
+                    <div className="dash-verif-counts">
+                      <span className="dash-verif-count dash-verif-count--green">
+                        <i className="bi bi-check-circle-fill" /> {c.atendido}
+                      </span>
+                      <span className="dash-verif-count dash-verif-count--yellow">
+                        <i className="bi bi-dash-circle-fill" /> {c.parcial}
+                      </span>
+                      <span className="dash-verif-count dash-verif-count--red">
+                        <i className="bi bi-x-circle-fill" /> {c.nao_atendido}
+                      </span>
+                    </div>
+                    <div className="dash-dim-item__track" style={{ marginTop: '0.5rem' }}>
+                      <div
+                        className={`dash-dim-item__fill dash-dim-item__fill--${color}`}
+                        style={{ width: pct === null ? '0%' : `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
 
 
         </div>
