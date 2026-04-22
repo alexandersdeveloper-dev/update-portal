@@ -611,6 +611,34 @@
   letter-spacing: 0.05em;
 }
 
+/* ── PDF button ── */
+.admin-pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid #fca5a5;
+  background: #fff1f2;
+  color: #dc2626;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+
+.admin-pdf-btn:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+.admin-pdf-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* ── Edit toggle button ── */
 .admin-edit-toggle {
   display: inline-flex;

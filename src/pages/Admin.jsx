@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, createContext, useContext } from 'rea
 import { useNavigate, useLocation, NavLink, Outlet } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { FullReportPDFDocument, pdf } from '../CategoryPDF.jsx'
 import '../styles.css'
 import '../admin.css'
 
@@ -690,6 +691,36 @@ export function AdminAvaliacao() {
   const { categories, responses, fetchData, saveResponse, saving, showToast } = useAdmin()
   const [expandedCard, setExpandedCard] = useState(null)
   const [editMode, setEditMode]         = useState(false)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+
+  async function handleExportAll() {
+    if (downloadingPdf) return
+    setDownloadingPdf(true)
+    try {
+      const cats = categories.map(cat => ({
+        title:       cat.name,
+        description: cat.description ?? '',
+        tone:        cat.tone,
+        features: (cat.criteria ?? []).map(crit => ({
+          criterion:  crit.text,
+          importance: crit.importance ?? null,
+          subitems:   (crit.subitems ?? []).map(sub => ({
+            text:   sub.label,
+            status: responses[sub.id] ?? null,
+          })),
+        })),
+      }))
+      const blob = await pdf(<FullReportPDFDocument categories={cats} />).toBlob()
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href     = url
+      a.download = 'relatorio-transparencia-parintins.pdf'
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
 
   async function handleAddCategory() {
     const maxOrder = Math.max(0, ...categories.map(c => c.order ?? 0))
@@ -710,14 +741,25 @@ export function AdminAvaliacao() {
           <h2 className="admin-page__title">Avaliação</h2>
           <p className="admin-page__subtitle">Gerencie as categorias, critérios e respostas.</p>
         </div>
-        <button
-          className={`admin-edit-toggle${editMode ? ' admin-edit-toggle--active' : ''}`}
-          onClick={() => setEditMode(v => !v)}
-          type="button"
-        >
-          <i className={`bi ${editMode ? 'bi-pencil-fill' : 'bi-pencil'}`} />
-          {editMode ? 'Edição ativa' : 'Editar estrutura'}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            className="admin-pdf-btn"
+            onClick={handleExportAll}
+            disabled={downloadingPdf}
+            type="button"
+          >
+            <i className={`bi ${downloadingPdf ? 'bi-hourglass-split' : 'bi-file-earmark-pdf'}`} />
+            {downloadingPdf ? 'Gerando...' : 'PDF'}
+          </button>
+          <button
+            className={`admin-edit-toggle${editMode ? ' admin-edit-toggle--active' : ''}`}
+            onClick={() => setEditMode(v => !v)}
+            type="button"
+          >
+            <i className={`bi ${editMode ? 'bi-pencil-fill' : 'bi-pencil'}`} />
+            {editMode ? 'Edição ativa' : 'Editar estrutura'}
+          </button>
+        </div>
       </div>
 
       {editMode && (

@@ -1,4 +1,5 @@
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer'
+export { pdf }
 
 const STATUS_LABEL = {
   atendido:      { label: 'Atendido',      color: '#16a34a' },
@@ -39,6 +40,27 @@ function formatDate(iso) {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   }).format(new Date(iso))
+}
+
+const IMPORTANCE_WEIGHT = { essencial: 2, obrigatoria: 1.5, recomendada: 1 }
+
+function calcWeightedScore(features) {
+  let weightedSum = 0, totalWeight = 0
+  for (const f of features ?? []) {
+    const weight = IMPORTANCE_WEIGHT[f.importance] ?? 1
+    let sum = 0, count = 0
+    for (const sub of f.subitems ?? []) {
+      if (!sub.status || sub.status === 'nao_aplicavel') continue
+      if (sub.status === 'atendido') sum += 1
+      else if (sub.status === 'parcial') sum += 0.5
+      count++
+    }
+    if (count === 0) continue
+    weightedSum += (sum / count) * weight
+    totalWeight += weight
+  }
+  if (totalWeight === 0) return null
+  return Math.round((weightedSum / totalWeight) * 100)
 }
 
 const s = StyleSheet.create({
@@ -133,6 +155,157 @@ const s = StyleSheet.create({
   footerLeft: { fontSize: 7, color: '#94a3b8', flex: 1, lineHeight: 1.5 },
   footerRight: { fontSize: 7, color: '#94a3b8', textAlign: 'right' },
 })
+
+const rs = StyleSheet.create({
+  // Cover page
+  cover: {
+    fontFamily: 'Helvetica',
+    backgroundColor: '#031d44',
+    paddingTop: 0,
+    paddingBottom: 0,
+    paddingHorizontal: 0,
+  },
+  coverTopBar: { flexDirection: 'row', height: 6 },
+  coverTopSeg: { flex: 1, height: 6 },
+  coverBody: { flex: 1, padding: 52, justifyContent: 'center' },
+  coverEyebrow: { fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 14 },
+  coverTitle: { fontSize: 30, fontFamily: 'Helvetica-Bold', color: '#fff', marginBottom: 8, lineHeight: 1.2 },
+  coverSub: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginBottom: 40 },
+  coverScoreWrap: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 6 },
+  coverScoreNum: { fontSize: 56, fontFamily: 'Helvetica-Bold' },
+  coverScoreLabel: { fontSize: 13, color: 'rgba(255,255,255,0.55)', paddingBottom: 6 },
+  coverMeta: { fontSize: 8, color: 'rgba(255,255,255,0.35)', marginTop: 48 },
+
+  // Category section divider
+  catDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  catAccent: { width: 4, borderRadius: 99, marginRight: 12, flexShrink: 0 },
+  catTitleBlock: { flex: 1 },
+  catTitle: { fontSize: 14, fontFamily: 'Helvetica-Bold', color: '#0f172a' },
+  catDesc: { fontSize: 8.5, color: '#64748b', marginTop: 2 },
+  catScoreBadge: { fontSize: 20, fontFamily: 'Helvetica-Bold' },
+  catScoreLabel: { fontSize: 7, color: '#94a3b8', textAlign: 'right' },
+})
+
+export function FullReportPDFDocument({ categories, generatedAt }) {
+  const now = formatDate(generatedAt ?? new Date().toISOString())
+
+  const catScores = categories.map(cat => {
+    const score = calcWeightedScore(cat.features)
+    return { ...cat, score }
+  })
+
+  const scores = catScores.map(c => c.score).filter(s => s !== null)
+  const overall = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
+  const overallColor = overall !== null ? progressColor(overall) : '#94a3b8'
+
+  return (
+    <Document title="Relatório Completo de Transparência" author="Radar Parintins">
+
+      {/* ── Capa ── */}
+      <Page size="A4" style={rs.cover}>
+        <View style={rs.coverTopBar}>
+          {['#2f86de', '#c47b36', '#ffbf3f', '#ef6a4c'].map((c, i) => (
+            <View key={i} style={[rs.coverTopSeg, { backgroundColor: c }]} />
+          ))}
+        </View>
+        <View style={rs.coverBody}>
+          <Text style={rs.coverEyebrow}>Município de Parintins — AM</Text>
+          <Text style={rs.coverTitle}>Relatório de{'\n'}Transparência</Text>
+          <Text style={rs.coverSub}>Avaliação completa de todos os critérios do Portal da Transparência</Text>
+          {overall !== null && (
+            <View style={rs.coverScoreWrap}>
+              <Text style={[rs.coverScoreNum, { color: overallColor }]}>{overall}%</Text>
+              <Text style={rs.coverScoreLabel}>índice geral</Text>
+            </View>
+          )}
+          <Text style={rs.coverMeta}>Gerado em {now} · Radar Parintins · Este documento não possui caráter oficial.</Text>
+        </View>
+      </Page>
+
+      {/* ── Uma página por categoria ── */}
+      {catScores.map((cat, ci) => {
+        const pct      = cat.score
+        const scoreClr = pct !== null ? progressColor(pct) : '#94a3b8'
+        const accent   = cat.tone ?? '#2f86de'
+
+        return (
+          <Page key={ci} size="A4" style={s.page}>
+            <View style={s.topBar} fixed>
+              {['#2f86de', '#c47b36', '#ffbf3f', '#ef6a4c'].map((c, i) => (
+                <View key={i} style={[s.topBarSegment, { backgroundColor: c }]} />
+              ))}
+            </View>
+
+            {/* Header da categoria */}
+            <View style={rs.catDivider}>
+              <View style={[rs.catAccent, { backgroundColor: accent, minHeight: 36 }]} />
+              <View style={rs.catTitleBlock}>
+                <Text style={rs.catTitle}>{cat.title}</Text>
+                {cat.description ? <Text style={rs.catDesc}>{cat.description}</Text> : null}
+              </View>
+              {pct !== null && (
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={[rs.catScoreBadge, { color: scoreClr }]}>{pct}%</Text>
+                  <Text style={rs.catScoreLabel}>atendido</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Barra de progresso */}
+            {pct !== null && (
+              <View style={s.progressWrap}>
+                <View style={s.progressTrack}>
+                  <View style={[s.progressFill, { width: `${pct}%`, backgroundColor: scoreClr }]} />
+                </View>
+                <Text style={s.progressText}>{pct}% dos critérios atendidos</Text>
+              </View>
+            )}
+
+            {/* Critérios */}
+            {(cat.features ?? []).map((f, fi) => {
+              const imp = IMPORTANCE_LABEL[f.importance]
+              return (
+                <View key={fi} style={s.critBlock} wrap={false}>
+                  <View style={s.critHeader}>
+                    <View style={[s.critAccent, { backgroundColor: imp?.color ?? accent, minHeight: 12 }]} />
+                    <Text style={s.critText}>{f.criterion}</Text>
+                    {imp && <Text style={[s.impChip, { backgroundColor: imp.color }]}>{imp.label}</Text>}
+                  </View>
+                  {(f.subitems ?? []).map((sub, si) => {
+                    const st = STATUS_LABEL[sub.status] ?? { label: 'Sem resposta', color: '#cbd5e1' }
+                    return (
+                      <View key={si} style={s.subItem}>
+                        <View style={[s.subDot, { backgroundColor: st.color }]} />
+                        <Text style={s.subText}>{sub.text}</Text>
+                        <Text style={[s.subStatus, { color: st.color }]}>{st.label}</Text>
+                      </View>
+                    )
+                  })}
+                </View>
+              )
+            })}
+
+            {/* Footer */}
+            <View style={s.footer} fixed>
+              <Text style={s.footerLeft}>
+                {`${ci + 1} de ${categories.length} — ${cat.title}`}
+                {'\n'}Este documento não possui caráter oficial.
+              </Text>
+              <Text style={s.footerRight}>Gerado em {now}</Text>
+            </View>
+          </Page>
+        )
+      })}
+    </Document>
+  )
+}
 
 export function CategoryPDFDocument({ title, description, features, lastUpdate, tone }) {
   const pct      = calcProgress(features)
