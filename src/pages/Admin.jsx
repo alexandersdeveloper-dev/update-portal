@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useNavigate, useLocation, NavLink, Outlet } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import '../styles.css'
@@ -25,6 +25,21 @@ const IMPORTANCE_LABEL = {
   obrigatoria:  { label: 'Obrigatória',  weight: 2 },
   recomendada:  { label: 'Recomendada',  weight: 1 },
 }
+
+const NAV_ITEMS = [
+  { to: '/admin',           label: 'Dashboard',  icon: 'bi-speedometer2',     end: true },
+  { to: '/admin/avaliacao', label: 'Avaliação',  icon: 'bi-clipboard-check',  end: false },
+]
+
+const PAGE_TITLES = {
+  '/admin':           'Dashboard',
+  '/admin/avaliacao': 'Avaliação',
+}
+
+// ─── Context ──────────────────────────────────────────────────────────────────
+
+const AdminContext = createContext(null)
+function useAdmin() { return useContext(AdminContext) }
 
 // ─── Helpers de score ─────────────────────────────────────────────────────────
 
@@ -442,8 +457,6 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
 
   return (
     <article className={`admin-card${editMode ? ' admin-card--edit-mode' : ''}`} style={{ '--tone': category.tone }}>
-
-      {/* Header: edit form OR normal header + optional edit actions */}
       {editMode && editingMeta ? (
         <div className="admin-card__edit-header">
           <div className="edit-form-meta">
@@ -496,7 +509,6 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
               <i className={`bi ${isExpanded ? 'bi-chevron-up' : 'bi-chevron-down'} admin-card__chevron`} />
             </div>
           </button>
-
           {editMode && (
             <div className="card-edit-actions">
               <button className="icon-btn icon-btn--edit" onClick={() => setEditingMeta(true)} title="Editar categoria" type="button">
@@ -510,7 +522,6 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
         </div>
       )}
 
-      {/* Expanded content */}
       {isExpanded && (
         <div className="admin-card__content">
           <div className="obs-field">
@@ -524,12 +535,7 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
               rows={3}
               placeholder="Descreva a situação desta categoria para o chefe..."
             />
-            <button
-              className="obs-field__save"
-              type="button"
-              onClick={handleSaveObservation}
-              disabled={savingObs}
-            >
+            <button className="obs-field__save" type="button" onClick={handleSaveObservation} disabled={savingObs}>
               {savingObs
                 ? <><i className="bi bi-arrow-repeat admin-spin" /> Salvando...</>
                 : <><i className="bi bi-check-lg" /> Salvar observação</>}
@@ -559,20 +565,209 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
   )
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+
+function AdminSidebar({ session, onSignOut, open, onClose }) {
+  return (
+    <>
+      {open && <div className="sidebar-overlay" onClick={onClose} />}
+      <aside className={`admin-sidebar${open ? ' admin-sidebar--open' : ''}`}>
+        <div className="admin-sidebar__brand">
+          <div className="admin-sidebar__brand-icon">
+            <i className="bi bi-shield-fill-check" />
+          </div>
+          <div className="admin-sidebar__brand-text">
+            <span className="admin-sidebar__brand-name">Radar Admin</span>
+            <span className="admin-sidebar__brand-sub">Parintins</span>
+          </div>
+        </div>
+
+        <nav className="admin-sidebar__nav">
+          <span className="admin-sidebar__section-label">Menu</span>
+          {NAV_ITEMS.map(item => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                `admin-sidebar__nav-item${isActive ? ' admin-sidebar__nav-item--active' : ''}`
+              }
+              onClick={onClose}
+            >
+              <i className={`bi ${item.icon}`} />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="admin-sidebar__footer">
+          <div className="admin-sidebar__user">
+            <div className="admin-sidebar__avatar">
+              <i className="bi bi-person-fill" />
+            </div>
+            <div className="admin-sidebar__user-info">
+              <span className="admin-sidebar__user-label">Administrador</span>
+              <span className="admin-sidebar__user-email">{session?.user?.email}</span>
+            </div>
+          </div>
+          <button className="admin-sidebar__signout" onClick={onSignOut} type="button">
+            <i className="bi bi-box-arrow-right" />
+            <span>Sair</span>
+          </button>
+        </div>
+      </aside>
+    </>
+  )
+}
+
+// ─── Content topbar ───────────────────────────────────────────────────────────
+
+function AdminContentTopbar({ onMenuOpen }) {
+  const location = useLocation()
+  const title = PAGE_TITLES[location.pathname] ?? 'Admin'
+
+  return (
+    <header className="admin-content-topbar">
+      <div className="admin-content-topbar__left">
+        <button className="admin-hamburger" type="button" aria-label="Abrir menu" onClick={onMenuOpen}>
+          <i className="bi bi-list" />
+        </button>
+        <h1 className="admin-content-topbar__title">{title}</h1>
+      </div>
+      <div className="admin-content-topbar__right">
+        <a href="/" className="admin-topbar-link" target="_blank" rel="noreferrer">
+          <i className="bi bi-eye" />
+          <span>Ver portal</span>
+        </a>
+      </div>
+    </header>
+  )
+}
+
+// ─── Página: Dashboard ────────────────────────────────────────────────────────
+
+export function AdminDashboard() {
+  const { categories, responses } = useAdmin()
+
+  const totalCriteria = categories.reduce((s, c) => s + (c.criteria?.length ?? 0), 0)
+  const totalSubitems = categories.reduce((s, c) =>
+    s + (c.criteria ?? []).reduce((cs, cr) => cs + (cr.subitems?.length ?? 0), 0), 0)
+  const answered = Object.values(responses).filter(v => v && v !== 'nao_aplicavel').length
+
+  const stats = [
+    { icon: 'bi-grid-1x2-fill',       label: 'Categorias',         value: categories.length,  color: 'blue'   },
+    { icon: 'bi-list-check',           label: 'Critérios',          value: totalCriteria,       color: 'purple' },
+    { icon: 'bi-check2-circle',        label: 'Itens respondidos',  value: `${answered} / ${totalSubitems}`, color: 'green' },
+  ]
+
+  return (
+    <div className="admin-page">
+      <div className="admin-page__header">
+        <h2 className="admin-page__title">Visão Geral</h2>
+        <p className="admin-page__subtitle">Resumo do índice de transparência do município.</p>
+      </div>
+
+      <div className="admin-dash-stats">
+        {stats.map(s => (
+          <div key={s.label} className={`admin-dash-stat admin-dash-stat--${s.color}`}>
+            <div className="admin-dash-stat__icon"><i className={`bi ${s.icon}`} /></div>
+            <div className="admin-dash-stat__body">
+              <span className="admin-dash-stat__value">{s.value}</span>
+              <span className="admin-dash-stat__label">{s.label}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <ScorePanel categories={categories} responses={responses} />
+    </div>
+  )
+}
+
+// ─── Página: Avaliação ────────────────────────────────────────────────────────
+
+export function AdminAvaliacao() {
+  const { categories, responses, fetchData, saveResponse, saving, showToast } = useAdmin()
+  const [expandedCard, setExpandedCard] = useState(null)
+  const [editMode, setEditMode]         = useState(false)
+
+  async function handleAddCategory() {
+    const maxOrder = Math.max(0, ...categories.map(c => c.order ?? 0))
+    const { error } = await supabase.from('categories').insert({
+      name: 'Nova categoria',
+      icon: 'bi-folder',
+      tone: '#2f86de',
+      order: maxOrder + 1,
+    })
+    if (!error) fetchData()
+    else alert('Erro ao adicionar categoria: ' + error.message)
+  }
+
+  return (
+    <div className="admin-page">
+      <div className="admin-page__header admin-page__header--row">
+        <div>
+          <h2 className="admin-page__title">Avaliação</h2>
+          <p className="admin-page__subtitle">Gerencie as categorias, critérios e respostas.</p>
+        </div>
+        <button
+          className={`admin-edit-toggle${editMode ? ' admin-edit-toggle--active' : ''}`}
+          onClick={() => setEditMode(v => !v)}
+          type="button"
+        >
+          <i className={`bi ${editMode ? 'bi-pencil-fill' : 'bi-pencil'}`} />
+          {editMode ? 'Edição ativa' : 'Editar estrutura'}
+        </button>
+      </div>
+
+      {editMode && (
+        <div className="edit-mode-banner">
+          <i className="bi bi-pencil-fill" />
+          <span>Modo de edição ativo — use <strong>✏️</strong> para editar e <strong>🗑</strong> para excluir.</span>
+        </div>
+      )}
+
+      <div className="admin-cards-list">
+        {categories.map((cat, i) => (
+          <AdminCategoryCard
+            key={cat.id}
+            category={cat}
+            responses={responses}
+            onSave={saveResponse}
+            saving={saving}
+            isExpanded={expandedCard === i}
+            onToggle={() => setExpandedCard(expandedCard === i ? null : i)}
+            editMode={editMode}
+            onRefresh={fetchData}
+            onToast={showToast}
+          />
+        ))}
+      </div>
+
+      {editMode && (
+        <div className="add-item-wrap add-item-wrap--category">
+          <button className="add-btn add-btn--category" onClick={handleAddCategory} type="button">
+            <i className="bi bi-plus-circle-fill" /> Adicionar nova categoria
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Layout principal (AdminLayout) ──────────────────────────────────────────
 
 export default function Admin() {
   const { session, loading: authLoading, signOut } = useAuth()
   const navigate = useNavigate()
 
-  const [categories, setCategories]     = useState([])
-  const [responses, setResponses]       = useState({})
-  const [loadingData, setLoadingData]   = useState(true)
-  const [loadError, setLoadError]       = useState(null)
-  const [expandedCard, setExpandedCard] = useState(null)
-  const [saving, setSaving]             = useState(null)
-  const [editMode, setEditMode]         = useState(false)
-  const [toast, setToast]               = useState(null)
+  const [categories, setCategories]   = useState([])
+  const [responses, setResponses]     = useState({})
+  const [loadingData, setLoadingData] = useState(true)
+  const [loadError, setLoadError]     = useState(null)
+  const [saving, setSaving]           = useState(null)
+  const [toast, setToast]             = useState(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   function showToast(message, type = 'success') {
     setToast({ message, type })
@@ -630,18 +825,6 @@ export default function Admin() {
     setSaving(null)
   }, [])
 
-  async function handleAddCategory() {
-    const maxOrder = Math.max(0, ...categories.map(c => c.order ?? 0))
-    const { error } = await supabase.from('categories').insert({
-      name: 'Nova categoria',
-      icon: 'bi-folder',
-      tone: '#2f86de',
-      order: maxOrder + 1,
-    })
-    if (!error) fetchData()
-    else alert('Erro ao adicionar categoria: ' + error.message)
-  }
-
   async function handleSignOut() {
     await signOut()
     navigate('/login')
@@ -669,77 +852,27 @@ export default function Admin() {
   }
 
   return (
-    <div className="app-shell">
+    <AdminContext.Provider value={{ categories, responses, fetchData, saveResponse, saving, showToast }}>
       {toast && (
         <div className={`admin-toast admin-toast--${toast.type}`}>
           <i className={`bi ${toast.type === 'error' ? 'bi-x-circle-fill' : 'bi-check-circle-fill'}`} />
           {toast.message}
         </div>
       )}
-      <div className="admin-topbar">
-        <div className="container admin-topbar__inner">
-          <div className="admin-topbar__left">
-            <i className="bi bi-shield-fill-check" />
-            <span>Modo Administração</span>
-          </div>
-          <div className="admin-topbar__right">
-            <button
-              className={`admin-topbar__edit-toggle${editMode ? ' active' : ''}`}
-              onClick={() => setEditMode(v => !v)}
-              type="button"
-            >
-              <i className={`bi ${editMode ? 'bi-pencil-fill' : 'bi-pencil'}`} />
-              {editMode ? 'Edição ativa' : 'Editar estrutura'}
-            </button>
-            <a href="/" className="admin-topbar__link" target="_blank" rel="noreferrer">
-              <i className="bi bi-eye" /> Ver painel público
-            </a>
-            <button className="admin-topbar__logout" onClick={handleSignOut} type="button">
-              <i className="bi bi-box-arrow-right" /> Sair
-            </button>
-          </div>
+      <div className="admin-shell">
+        <AdminSidebar
+          session={session}
+          onSignOut={handleSignOut}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+        <div className="admin-content-area">
+          <AdminContentTopbar onMenuOpen={() => setSidebarOpen(true)} />
+          <main className="admin-content-main">
+            <Outlet />
+          </main>
         </div>
       </div>
-
-      <main className="admin-main">
-        <div className="container">
-
-          <ScorePanel categories={categories} responses={responses} />
-
-          {editMode && (
-            <div className="edit-mode-banner">
-              <i className="bi bi-pencil-fill" />
-              <span>Modo de edição ativo — use <strong>✏️</strong> para editar e <strong>🗑</strong> para excluir.</span>
-            </div>
-          )}
-
-          <div className="admin-cards-list">
-            {categories.map((cat, i) => (
-              <AdminCategoryCard
-                key={cat.id}
-                category={cat}
-                responses={responses}
-                onSave={saveResponse}
-                saving={saving}
-                isExpanded={expandedCard === i}
-                onToggle={() => setExpandedCard(expandedCard === i ? null : i)}
-                editMode={editMode}
-                onRefresh={fetchData}
-                onToast={showToast}
-              />
-            ))}
-          </div>
-
-          {editMode && (
-            <div className="add-item-wrap add-item-wrap--category">
-              <button className="add-btn add-btn--category" onClick={handleAddCategory} type="button">
-                <i className="bi bi-plus-circle-fill" /> Adicionar nova categoria
-              </button>
-            </div>
-          )}
-
-        </div>
-      </main>
-    </div>
+    </AdminContext.Provider>
   )
 }
