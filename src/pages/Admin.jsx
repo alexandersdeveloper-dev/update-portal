@@ -27,6 +27,8 @@ const IMPORTANCE_LABEL = {
   recomendada:  { label: 'Recomendada',  weight: 1 },
 }
 
+const ICON_RE = /^bi-[a-z0-9-]+$/
+
 const NAV_ITEMS = [
   { to: '/admin',           label: 'Dashboard',  icon: 'bi-speedometer2',     end: true },
   { to: '/admin/avaliacao', label: 'Avaliação',  icon: 'bi-clipboard-check',  end: false },
@@ -175,13 +177,16 @@ function SubitemRow({ subitem, responses, onSave, saving, editMode, onRefresh })
   const status = responses[subitem.id] ?? null
 
   async function handleSave() {
+    const trimmed = label.trim()
+    if (!trimmed) { alert('O texto do subitem não pode estar vazio.'); return }
+    if (trimmed.length > 200) { alert('O texto do subitem deve ter no máximo 200 caracteres.'); return }
     setBusy(true)
     const { error } = await supabase
       .from('subitems')
-      .update({ label, counts_for_score: countsForScore })
+      .update({ label: trimmed, counts_for_score: countsForScore })
       .eq('id', subitem.id)
     setBusy(false)
-    if (!error) { setEditing(false); onRefresh() }
+    if (!error) { setLabel(trimmed); setEditing(false); onRefresh() }
     else alert('Erro ao salvar: ' + error.message)
   }
 
@@ -276,13 +281,16 @@ function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefr
   const [busy, setBusy] = useState(false)
 
   async function handleSave() {
+    const trimmed = text.trim()
+    if (!trimmed) { alert('O texto do critério não pode estar vazio.'); return }
+    if (trimmed.length > 400) { alert('O texto do critério deve ter no máximo 400 caracteres.'); return }
     setBusy(true)
     const { error } = await supabase
       .from('criteria')
-      .update({ text, importance })
+      .update({ text: trimmed, importance })
       .eq('id', criterion.id)
     setBusy(false)
-    if (!error) { setEditing(false); onRefresh() }
+    if (!error) { setText(trimmed); setEditing(false); onRefresh() }
     else alert('Erro ao salvar: ' + error.message)
   }
 
@@ -398,13 +406,18 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
   const score = calcCategoryScore(category, responses)
 
   async function handleSaveMeta() {
+    const trimmedName = name.trim()
+    const trimmedIcon = icon.trim()
+    if (!trimmedName) { alert('O nome da categoria não pode estar vazio.'); return }
+    if (trimmedName.length > 120) { alert('O nome da categoria deve ter no máximo 120 caracteres.'); return }
+    if (!ICON_RE.test(trimmedIcon)) { alert('Ícone inválido. Use o formato: bi-nome-do-icone (ex: bi-building)'); return }
     setBusy(true)
     const { error } = await supabase
       .from('categories')
-      .update({ name, icon })
+      .update({ name: trimmedName, icon: trimmedIcon })
       .eq('id', category.id)
     setBusy(false)
-    if (!error) { setEditingMeta(false); onRefresh() }
+    if (!error) { setName(trimmedName); setIcon(trimmedIcon); setEditingMeta(false); onRefresh() }
     else alert('Erro ao salvar: ' + error.message)
   }
 
@@ -431,10 +444,11 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
   }
 
   async function handleSaveObservation() {
+    if (observation.length > 1000) { onToast('A observação deve ter no máximo 1000 caracteres.', 'error'); return }
     setSavingObs(true)
     const { error } = await supabase
       .from('categories')
-      .update({ observation: observation || null })
+      .update({ observation: observation.trim() || null })
       .eq('id', category.id)
     setSavingObs(false)
     if (!error) onToast('Observação salva com sucesso.')
@@ -858,14 +872,19 @@ export default function Admin() {
   useEffect(() => { fetchData() }, [fetchData])
 
   const saveResponse = useCallback(async (subitemId, status) => {
+    const prevStatus = responses[subitemId]
     setSaving(subitemId)
     setResponses(prev => ({ ...prev, [subitemId]: status }))
     const { error } = await supabase
       .from('responses')
       .upsert({ subitem_id: subitemId, status }, { onConflict: 'subitem_id' })
-    if (error) console.error('Erro ao salvar:', error.message)
     setSaving(null)
-  }, [])
+    if (error) {
+      setResponses(prev => ({ ...prev, [subitemId]: prevStatus }))
+      setToast({ message: 'Erro ao salvar resposta. Tente novamente.', type: 'error' })
+      setTimeout(() => setToast(null), 3000)
+    }
+  }, [responses])
 
   async function handleSignOut() {
     await signOut()

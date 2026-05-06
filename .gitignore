@@ -2,5 +2,7 @@ node_modules
 dist
 .env
 .env.*
+.vercel
+npm-debug.log*
 CLAUDE.md
 README.md
