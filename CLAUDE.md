@@ -8,6 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev      # Start development server with hot reload
 npm run build    # Create optimized production build to /dist
 npm run preview  # Preview production build locally
+
+# One-shot Supabase seed (populates categories/criteria/subitems from hardcoded data in the script)
+SERVICE_ROLE_KEY=<service_role_key> node scripts/seed.js
 ```
 
 No test framework is configured.
@@ -75,3 +78,7 @@ Scores are computed client-side in [src/pages/Dashboard.jsx](src/pages/Dashboard
 ### External dependencies (CDN)
 
 Bootstrap Icons and Google Fonts (Manrope, Sora) are loaded via CDN in [index.html](index.html) — not bundled via npm.
+
+### Deployment ([vercel.json](vercel.json))
+
+Deployed on Vercel as an SPA: all paths rewrite to `/`. A strict **Content-Security-Policy** is set in response headers — when adding any new external origin (script, style, font, image, or API), update the CSP in `vercel.json` or the resource will be blocked at runtime. Currently allowed: Google Fonts, jsDelivr (Bootstrap Icons), `*.supabase.co`, and `acheitudo.com.br` images.
