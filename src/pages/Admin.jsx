@@ -583,22 +583,29 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 function AdminSidebar({ session, onSignOut, open, onClose }) {
+  const email = session?.user?.email ?? ''
+  const initials = email.slice(0, 2).toUpperCase()
+
   return (
     <>
       {open && <div className="sidebar-overlay" onClick={onClose} />}
       <aside className={`admin-sidebar${open ? ' admin-sidebar--open' : ''}`}>
+        <div className="admin-sidebar__stripe"><i /><i /><i /><i /></div>
+
         <div className="admin-sidebar__brand">
           <div className="admin-sidebar__brand-icon">
             <i className="bi bi-shield-fill-check" />
           </div>
           <div className="admin-sidebar__brand-text">
-            <span className="admin-sidebar__brand-name">Radar Admin</span>
-            <span className="admin-sidebar__brand-sub">Parintins</span>
+            <span className="admin-sidebar__brand-e">Portal</span>
+            <span className="admin-sidebar__brand-t">Painel Admin</span>
           </div>
         </div>
 
-        <nav className="admin-sidebar__nav">
+        <div className="admin-sidebar__section">
           <span className="admin-sidebar__section-label">Menu</span>
+        </div>
+        <nav className="admin-sidebar__nav">
           {NAV_ITEMS.map(item => (
             <NavLink
               key={item.to}
@@ -615,19 +622,14 @@ function AdminSidebar({ session, onSignOut, open, onClose }) {
           ))}
         </nav>
 
-        <div className="admin-sidebar__footer">
-          <div className="admin-sidebar__user">
-            <div className="admin-sidebar__avatar">
-              <i className="bi bi-person-fill" />
-            </div>
-            <div className="admin-sidebar__user-info">
-              <span className="admin-sidebar__user-label">Administrador</span>
-              <span className="admin-sidebar__user-email">{session?.user?.email}</span>
-            </div>
+        <div className="admin-sidebar__user">
+          <div className="admin-sidebar__avatar">{initials}</div>
+          <div className="admin-sidebar__user-info">
+            <span className="admin-sidebar__user-label">Administrador</span>
+            <span className="admin-sidebar__user-email">{email}</span>
           </div>
-          <button className="admin-sidebar__signout" onClick={onSignOut} type="button">
+          <button className="admin-sidebar__lo" onClick={onSignOut} title="Sair" type="button">
             <i className="bi bi-box-arrow-right" />
-            <span>Sair</span>
           </button>
         </div>
       </aside>
@@ -639,7 +641,7 @@ function AdminSidebar({ session, onSignOut, open, onClose }) {
 
 function AdminContentTopbar({ onMenuOpen }) {
   const location = useLocation()
-  const title = PAGE_TITLES[location.pathname] ?? 'Admin'
+  const pageTitle = PAGE_TITLES[location.pathname] ?? 'Admin'
 
   return (
     <header className="admin-content-topbar">
@@ -647,7 +649,11 @@ function AdminContentTopbar({ onMenuOpen }) {
         <button className="admin-hamburger" type="button" aria-label="Abrir menu" onClick={onMenuOpen}>
           <i className="bi bi-list" />
         </button>
-        <h1 className="admin-content-topbar__title">{title}</h1>
+        <div className="admin-breadcrumb">
+          <span>Transparência</span>
+          <span className="admin-breadcrumb__sep">/</span>
+          <span className="admin-breadcrumb__now">{pageTitle}</span>
+        </div>
       </div>
       <div className="admin-content-topbar__right">
         <a href="/" className="admin-topbar-link" target="_blank" rel="noreferrer">
@@ -668,28 +674,32 @@ export function AdminDashboard() {
   const totalSubitems = categories.reduce((s, c) =>
     s + (c.criteria ?? []).reduce((cs, cr) => cs + (cr.subitems?.length ?? 0), 0), 0)
   const answered = Object.values(responses).filter(v => v && v !== 'nao_aplicavel').length
+  const overall  = calcOverallScore(categories, responses)
 
-  const stats = [
-    { icon: 'bi-grid-1x2-fill',       label: 'Categorias',         value: categories.length,  color: 'blue'   },
-    { icon: 'bi-list-check',           label: 'Critérios',          value: totalCriteria,       color: 'purple' },
-    { icon: 'bi-check2-circle',        label: 'Itens respondidos',  value: `${answered} / ${totalSubitems}`, color: 'green' },
+  const kpis = [
+    { icon: 'bi-grid-1x2-fill',  label: 'Categorias',  value: categories.length,                       accent: 'b' },
+    { icon: 'bi-list-check',     label: 'Critérios',   value: totalCriteria,                            accent: 'o' },
+    { icon: 'bi-check2-circle',  label: 'Respondidos', value: `${answered} / ${totalSubitems}`,         accent: 'y' },
+    { icon: 'bi-graph-up-arrow', label: 'Score Geral', value: overall !== null ? `${overall}%` : '—',  accent: 'r' },
   ]
 
   return (
     <div className="admin-page">
       <div className="admin-page__header">
-        <h2 className="admin-page__title">Visão Geral</h2>
-        <p className="admin-page__subtitle">Resumo do índice de transparência do município.</p>
+        <div>
+          <h2 className="admin-page__title">Visão Geral</h2>
+          <p className="admin-page__subtitle">Resumo do índice de transparência do município.</p>
+        </div>
       </div>
 
-      <div className="admin-dash-stats">
-        {stats.map(s => (
-          <div key={s.label} className={`admin-dash-stat admin-dash-stat--${s.color}`}>
-            <div className="admin-dash-stat__icon"><i className={`bi ${s.icon}`} /></div>
-            <div className="admin-dash-stat__body">
-              <span className="admin-dash-stat__value">{s.value}</span>
-              <span className="admin-dash-stat__label">{s.label}</span>
+      <div className="admin-kpis">
+        {kpis.map(k => (
+          <div key={k.label} className={`admin-kpi admin-kpi--${k.accent}`}>
+            <div className="admin-kpi__top">
+              <span className="admin-kpi__label">{k.label}</span>
+              <span className="admin-kpi__icon"><i className={`bi ${k.icon}`} /></span>
             </div>
+            <div className="admin-kpi__num">{k.value}</div>
           </div>
         ))}
       </div>
