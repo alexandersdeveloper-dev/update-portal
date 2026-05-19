@@ -44,6 +44,23 @@ const PAGE_TITLES = {
 const AdminContext = createContext(null)
 function useAdmin() { return useContext(AdminContext) }
 
+// ─── ConfirmDialog ────────────────────────────────────────────────────────────
+
+function ConfirmDialog({ title, description, confirmLabel = 'Excluir', onConfirm, onCancel }) {
+  return (
+    <div className="confirm-dialog__overlay" onClick={onCancel}>
+      <div className="confirm-dialog" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="cdlg-title">
+        <h3 className="confirm-dialog__title" id="cdlg-title">{title}</h3>
+        {description && <p className="confirm-dialog__desc">{description}</p>}
+        <div className="confirm-dialog__actions">
+          <button className="confirm-dialog__cancel" onClick={onCancel} type="button">Cancelar</button>
+          <button className="confirm-dialog__confirm" onClick={onConfirm} type="button">{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Helpers de score ─────────────────────────────────────────────────────────
 
 function statusValue(status) {
@@ -173,13 +190,16 @@ function SubitemRow({ subitem, responses, onSave, saving, editMode, onRefresh })
   const [label, setLabel] = useState(subitem.label)
   const [countsForScore, setCountsForScore] = useState(subitem.counts_for_score)
   const [busy, setBusy] = useState(false)
+  const [fieldError, setFieldError] = useState(null)
+  const { showToast, showDialog } = useAdmin()
 
   const status = responses[subitem.id] ?? null
 
   async function handleSave() {
     const trimmed = label.trim()
-    if (!trimmed) { alert('O texto do subitem não pode estar vazio.'); return }
-    if (trimmed.length > 200) { alert('O texto do subitem deve ter no máximo 200 caracteres.'); return }
+    if (!trimmed) { setFieldError('O texto do subitem não pode estar vazio.'); return }
+    if (trimmed.length > 200) { setFieldError('O texto do subitem deve ter no máximo 200 caracteres.'); return }
+    setFieldError(null)
     setBusy(true)
     const { error } = await supabase
       .from('subitems')
@@ -187,23 +207,30 @@ function SubitemRow({ subitem, responses, onSave, saving, editMode, onRefresh })
       .eq('id', subitem.id)
     setBusy(false)
     if (!error) { setLabel(trimmed); setEditing(false); onRefresh() }
-    else alert('Erro ao salvar: ' + error.message)
+    else showToast('Erro ao salvar: ' + error.message, 'error')
   }
 
   function handleCancel() {
     setEditing(false)
     setLabel(subitem.label)
     setCountsForScore(subitem.counts_for_score)
+    setFieldError(null)
   }
 
   async function handleDelete() {
-    if (!confirm(`Excluir subitem?\n"${subitem.label}"`)) return
-    setBusy(true)
-    await supabase.from('responses').delete().eq('subitem_id', subitem.id)
-    const { error } = await supabase.from('subitems').delete().eq('id', subitem.id)
-    setBusy(false)
-    if (!error) onRefresh()
-    else alert('Erro ao excluir: ' + error.message)
+    showDialog({
+      title: 'Excluir subitem',
+      description: `Excluir "${subitem.label}"? Esta ação não pode ser desfeita.`,
+      confirmLabel: 'Excluir',
+      onConfirm: async () => {
+        setBusy(true)
+        await supabase.from('responses').delete().eq('subitem_id', subitem.id)
+        const { error } = await supabase.from('subitems').delete().eq('id', subitem.id)
+        setBusy(false)
+        if (!error) { onRefresh(); showToast('Subitem excluído.') }
+        else showToast('Erro ao excluir: ' + error.message, 'error')
+      },
+    })
   }
 
   if (editMode && editing) {
@@ -213,10 +240,15 @@ function SubitemRow({ subitem, responses, onSave, saving, editMode, onRefresh })
           <input
             className="edit-input"
             value={label}
-            onChange={e => setLabel(e.target.value)}
+            onChange={e => { setLabel(e.target.value); if (fieldError) setFieldError(null) }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') { e.preventDefault(); handleSave() }
+              if (e.key === 'Escape') handleCancel()
+            }}
             placeholder="Texto do subitem"
             autoFocus
           />
+          {fieldError && <p className="field-error">{fieldError}</p>}
           <label className="edit-checkbox-label">
             <input
               type="checkbox"
@@ -279,11 +311,14 @@ function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefr
   const [text, setText] = useState(criterion.text)
   const [importance, setImportance] = useState(criterion.importance ?? 'recomendada')
   const [busy, setBusy] = useState(false)
+  const [fieldError, setFieldError] = useState(null)
+  const { showToast, showDialog } = useAdmin()
 
   async function handleSave() {
     const trimmed = text.trim()
-    if (!trimmed) { alert('O texto do critério não pode estar vazio.'); return }
-    if (trimmed.length > 400) { alert('O texto do critério deve ter no máximo 400 caracteres.'); return }
+    if (!trimmed) { setFieldError('O texto do critério não pode estar vazio.'); return }
+    if (trimmed.length > 400) { setFieldError('O texto do critério deve ter no máximo 400 caracteres.'); return }
+    setFieldError(null)
     setBusy(true)
     const { error } = await supabase
       .from('criteria')
@@ -291,25 +326,32 @@ function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefr
       .eq('id', criterion.id)
     setBusy(false)
     if (!error) { setText(trimmed); setEditing(false); onRefresh() }
-    else alert('Erro ao salvar: ' + error.message)
+    else showToast('Erro ao salvar: ' + error.message, 'error')
   }
 
   function handleCancel() {
     setEditing(false)
     setText(criterion.text)
     setImportance(criterion.importance ?? 'recomendada')
+    setFieldError(null)
   }
 
   async function handleDelete() {
-    if (!confirm(`Excluir critério "${criterion.code}"?\nTodos os subitens e respostas serão removidos.`)) return
-    setBusy(true)
-    const subIds = (criterion.subitems ?? []).map(s => s.id)
-    if (subIds.length) await supabase.from('responses').delete().in('subitem_id', subIds)
-    await supabase.from('subitems').delete().eq('criterion_id', criterion.id)
-    const { error } = await supabase.from('criteria').delete().eq('id', criterion.id)
-    setBusy(false)
-    if (!error) onRefresh()
-    else alert('Erro ao excluir: ' + error.message)
+    showDialog({
+      title: 'Excluir critério',
+      description: `Excluir critério "${criterion.code}"? Todos os subitens e respostas serão removidos.`,
+      confirmLabel: 'Excluir',
+      onConfirm: async () => {
+        setBusy(true)
+        const subIds = (criterion.subitems ?? []).map(s => s.id)
+        if (subIds.length) await supabase.from('responses').delete().in('subitem_id', subIds)
+        await supabase.from('subitems').delete().eq('criterion_id', criterion.id)
+        const { error } = await supabase.from('criteria').delete().eq('id', criterion.id)
+        setBusy(false)
+        if (!error) { onRefresh(); showToast('Critério excluído.') }
+        else showToast('Erro ao excluir: ' + error.message, 'error')
+      },
+    })
   }
 
   async function handleAddSubitem() {
@@ -321,7 +363,7 @@ function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefr
       counts_for_score: true,
     })
     if (!error) onRefresh()
-    else alert('Erro ao adicionar subitem: ' + error.message)
+    else showToast('Erro ao adicionar subitem: ' + error.message, 'error')
   }
 
   return (
@@ -333,10 +375,15 @@ function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefr
             <textarea
               className="edit-input edit-textarea"
               value={text}
-              onChange={e => setText(e.target.value)}
+              onChange={e => { setText(e.target.value); if (fieldError) setFieldError(null) }}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSave() }
+                if (e.key === 'Escape') handleCancel()
+              }}
               rows={3}
               autoFocus
             />
+            {fieldError && <p className="field-error">{fieldError}</p>}
             <select className="edit-select" value={importance} onChange={e => setImportance(e.target.value)}>
               {IMPORTANCE_OPTIONS.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -395,22 +442,27 @@ function CriterionBlock({ criterion, responses, onSave, saving, editMode, onRefr
 
 // ─── Category Card ────────────────────────────────────────────────────────────
 
-function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, onToggle, editMode, onRefresh, onToast }) {
+function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, onToggle, editMode, onRefresh }) {
   const [editingMeta, setEditingMeta] = useState(false)
   const [name, setName] = useState(category.name)
   const [icon, setIcon] = useState(category.icon)
   const [observation, setObservation] = useState(category.observation ?? '')
   const [savingObs, setSavingObs] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
+  const { showToast, showDialog } = useAdmin()
 
   const score = calcCategoryScore(category, responses)
 
   async function handleSaveMeta() {
     const trimmedName = name.trim()
     const trimmedIcon = icon.trim()
-    if (!trimmedName) { alert('O nome da categoria não pode estar vazio.'); return }
-    if (trimmedName.length > 120) { alert('O nome da categoria deve ter no máximo 120 caracteres.'); return }
-    if (!ICON_RE.test(trimmedIcon)) { alert('Ícone inválido. Use o formato: bi-nome-do-icone (ex: bi-building)'); return }
+    const errs = {}
+    if (!trimmedName) errs.name = 'O nome não pode estar vazio.'
+    else if (trimmedName.length > 120) errs.name = 'Máximo 120 caracteres.'
+    if (!ICON_RE.test(trimmedIcon)) errs.icon = 'Formato inválido. Use: bi-nome-do-icone'
+    if (Object.keys(errs).length) { setFieldErrors(errs); return }
+    setFieldErrors({})
     setBusy(true)
     const { error } = await supabase
       .from('categories')
@@ -418,7 +470,7 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
       .eq('id', category.id)
     setBusy(false)
     if (!error) { setName(trimmedName); setIcon(trimmedIcon); setEditingMeta(false); onRefresh() }
-    else alert('Erro ao salvar: ' + error.message)
+    else showToast('Erro ao salvar: ' + error.message, 'error')
   }
 
   function handleCancelMeta() {
@@ -426,33 +478,40 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
     setName(category.name)
     setIcon(category.icon)
     setObservation(category.observation ?? '')
+    setFieldErrors({})
   }
 
   async function handleDeleteCategory() {
-    if (!confirm(`Excluir a categoria "${category.name}"?\n\nTODOS os critérios, subitems e respostas serão permanentemente removidos.`)) return
-    setBusy(true)
-    const subIds = (category.criteria ?? []).flatMap(c => (c.subitems ?? []).map(s => s.id))
-    if (subIds.length) await supabase.from('responses').delete().in('subitem_id', subIds)
-    for (const crit of category.criteria ?? []) {
-      await supabase.from('subitems').delete().eq('criterion_id', crit.id)
-    }
-    await supabase.from('criteria').delete().eq('category_id', category.id)
-    const { error } = await supabase.from('categories').delete().eq('id', category.id)
-    setBusy(false)
-    if (!error) onRefresh()
-    else alert('Erro ao excluir: ' + error.message)
+    showDialog({
+      title: 'Excluir categoria',
+      description: `Excluir "${category.name}"? TODOS os critérios, subitens e respostas serão removidos permanentemente.`,
+      confirmLabel: 'Excluir tudo',
+      onConfirm: async () => {
+        setBusy(true)
+        const subIds = (category.criteria ?? []).flatMap(c => (c.subitems ?? []).map(s => s.id))
+        if (subIds.length) await supabase.from('responses').delete().in('subitem_id', subIds)
+        for (const crit of category.criteria ?? []) {
+          await supabase.from('subitems').delete().eq('criterion_id', crit.id)
+        }
+        await supabase.from('criteria').delete().eq('category_id', category.id)
+        const { error } = await supabase.from('categories').delete().eq('id', category.id)
+        setBusy(false)
+        if (!error) { onRefresh(); showToast('Categoria excluída.') }
+        else showToast('Erro ao excluir: ' + error.message, 'error')
+      },
+    })
   }
 
   async function handleSaveObservation() {
-    if (observation.length > 1000) { onToast('A observação deve ter no máximo 1000 caracteres.', 'error'); return }
+    if (observation.length > 1000) { showToast('A observação deve ter no máximo 1000 caracteres.', 'error'); return }
     setSavingObs(true)
     const { error } = await supabase
       .from('categories')
       .update({ observation: observation.trim() || null })
       .eq('id', category.id)
     setSavingObs(false)
-    if (!error) onToast('Observação salva com sucesso.')
-    else onToast('Erro ao salvar observação.', 'error')
+    if (!error) showToast('Observação salva com sucesso.')
+    else showToast('Erro ao salvar observação.', 'error')
   }
 
   async function handleAddCriterion() {
@@ -467,7 +526,7 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
       order: maxOrder + 1,
     })
     if (!error) onRefresh()
-    else alert('Erro ao adicionar critério: ' + error.message)
+    else showToast('Erro ao adicionar critério: ' + error.message, 'error')
   }
 
   return (
@@ -477,14 +536,16 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
           <div className="edit-form-meta">
             <div className="edit-form-row">
               <label className="edit-label">Nome da categoria</label>
-              <input className="edit-input" value={name} onChange={e => setName(e.target.value)} autoFocus />
+              <input className="edit-input" value={name} onChange={e => { setName(e.target.value); if (fieldErrors.name) setFieldErrors(p => ({ ...p, name: null })) }} autoFocus />
+              {fieldErrors.name && <p className="field-error">{fieldErrors.name}</p>}
             </div>
             <div className="edit-form-row">
               <label className="edit-label">Ícone Bootstrap</label>
               <div className="edit-icon-row">
                 <i className={`bi ${icon} edit-icon-preview`} />
-                <input className="edit-input" value={icon} onChange={e => setIcon(e.target.value)} placeholder="ex: bi-building" />
+                <input className="edit-input" value={icon} onChange={e => { setIcon(e.target.value); if (fieldErrors.icon) setFieldErrors(p => ({ ...p, icon: null })) }} placeholder="ex: bi-building" />
               </div>
+              {fieldErrors.icon && <p className="field-error">{fieldErrors.icon}</p>}
             </div>
             <div className="edit-form-row">
               <label className="edit-label">Observação</label>
@@ -517,6 +578,14 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
               </div>
               <div className="admin-card__titles">
                 <h3 className="admin-card__name">{category.name}</h3>
+                {score !== null && (
+                  <div className="admin-card__progress">
+                    <div
+                      className="admin-card__progress-bar"
+                      style={{ width: `${score}%`, background: score >= 80 ? 'var(--a-blue)' : score >= 50 ? 'var(--a-yellow)' : 'var(--a-red)' }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
             <div className="admin-card__header-right">
@@ -550,6 +619,7 @@ function AdminCategoryCard({ category, responses, onSave, saving, isExpanded, on
               rows={3}
               placeholder="Descreva a situação desta categoria para o chefe..."
             />
+            <span className="obs-field__count">{observation.length} / 1000</span>
             <button className="obs-field__save" type="button" onClick={handleSaveObservation} disabled={savingObs}>
               {savingObs
                 ? <><i className="bi bi-arrow-repeat admin-spin" /> Salvando...</>
@@ -676,11 +746,13 @@ export function AdminDashboard() {
   const answered = Object.values(responses).filter(v => v && v !== 'nao_aplicavel').length
   const overall  = calcOverallScore(categories, responses)
 
+  const scoreAccent = overall === null ? 'r' : overall >= 80 ? 'b' : overall >= 50 ? 'y' : 'r'
+
   const kpis = [
     { icon: 'bi-grid-1x2-fill',  label: 'Categorias',  value: categories.length,                       accent: 'b' },
     { icon: 'bi-list-check',     label: 'Critérios',   value: totalCriteria,                            accent: 'o' },
     { icon: 'bi-check2-circle',  label: 'Respondidos', value: `${answered} / ${totalSubitems}`,         accent: 'y' },
-    { icon: 'bi-graph-up-arrow', label: 'Score Geral', value: overall !== null ? `${overall}%` : '—',  accent: 'r' },
+    { icon: 'bi-graph-up-arrow', label: 'Score Geral', value: overall !== null ? `${overall}%` : '—',  accent: scoreAccent },
   ]
 
   return (
@@ -716,6 +788,14 @@ export function AdminAvaliacao() {
   const [expandedCard, setExpandedCard] = useState(null)
   const [editMode, setEditMode]         = useState(false)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [search, setSearch] = useState('')
+
+  const filtered = search.trim()
+    ? categories.filter(c =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        (c.criteria ?? []).some(cr => cr.text.toLowerCase().includes(search.toLowerCase()))
+      )
+    : categories
 
   async function handleExportAll() {
     if (downloadingPdf) return
@@ -755,7 +835,7 @@ export function AdminAvaliacao() {
       order: maxOrder + 1,
     })
     if (!error) fetchData()
-    else alert('Erro ao adicionar categoria: ' + error.message)
+    else showToast('Erro ao adicionar categoria: ' + error.message, 'error')
   }
 
   return (
@@ -765,7 +845,17 @@ export function AdminAvaliacao() {
           <h2 className="admin-page__title">Avaliação</h2>
           <p className="admin-page__subtitle">Gerencie as categorias, critérios e respostas.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="admin-page__header-actions">
+          <div className="admin-search">
+            <i className="bi bi-search admin-search__icon" />
+            <input
+              className="admin-search__input"
+              type="search"
+              placeholder="Buscar categoria ou critério..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
           <button
             className="admin-pdf-btn"
             onClick={handleExportAll}
@@ -793,8 +883,11 @@ export function AdminAvaliacao() {
         </div>
       )}
 
+      {search.trim() && filtered.length === 0 && (
+        <p className="admin-empty-search">Nenhuma categoria encontrada para "<strong>{search}</strong>".</p>
+      )}
       <div className="admin-cards-list">
-        {categories.map((cat, i) => (
+        {filtered.map((cat, i) => (
           <AdminCategoryCard
             key={cat.id}
             category={cat}
@@ -805,7 +898,6 @@ export function AdminAvaliacao() {
             onToggle={() => setExpandedCard(expandedCard === i ? null : i)}
             editMode={editMode}
             onRefresh={fetchData}
-            onToast={showToast}
           />
         ))}
       </div>
@@ -833,11 +925,16 @@ export default function Admin() {
   const [loadError, setLoadError]     = useState(null)
   const [saving, setSaving]           = useState(null)
   const [toast, setToast]             = useState(null)
+  const [dialog, setDialog]           = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   function showToast(message, type = 'success') {
     setToast({ message, type })
-    setTimeout(() => setToast(null), 3000)
+    setTimeout(() => setToast(null), type === 'error' ? 6000 : 3000)
+  }
+
+  function showDialog(opts) {
+    setDialog(opts)
   }
 
   useEffect(() => {
@@ -891,8 +988,7 @@ export default function Admin() {
     setSaving(null)
     if (error) {
       setResponses(prev => ({ ...prev, [subitemId]: prevStatus }))
-      setToast({ message: 'Erro ao salvar resposta. Tente novamente.', type: 'error' })
-      setTimeout(() => setToast(null), 3000)
+      showToast('Erro ao salvar resposta. Tente novamente.', 'error')
     }
   }, [responses])
 
@@ -923,11 +1019,23 @@ export default function Admin() {
   }
 
   return (
-    <AdminContext.Provider value={{ categories, responses, fetchData, saveResponse, saving, showToast }}>
+    <AdminContext.Provider value={{ categories, responses, fetchData, saveResponse, saving, showToast, showDialog }}>
+      {dialog && (
+        <ConfirmDialog
+          title={dialog.title}
+          description={dialog.description}
+          confirmLabel={dialog.confirmLabel}
+          onConfirm={() => { setDialog(null); dialog.onConfirm() }}
+          onCancel={() => setDialog(null)}
+        />
+      )}
       {toast && (
-        <div className={`admin-toast admin-toast--${toast.type}`}>
+        <div className={`admin-toast admin-toast--${toast.type}`} role="alert" aria-live="assertive">
           <i className={`bi ${toast.type === 'error' ? 'bi-x-circle-fill' : 'bi-check-circle-fill'}`} />
-          {toast.message}
+          <span>{toast.message}</span>
+          <button className="admin-toast__close" onClick={() => setToast(null)} type="button" aria-label="Fechar">
+            <i className="bi bi-x-lg" />
+          </button>
         </div>
       )}
       <div className="admin-shell">
