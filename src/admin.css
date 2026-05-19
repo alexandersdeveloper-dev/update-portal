@@ -874,11 +874,12 @@
   overflow: hidden;
 }
 
-.admin-card--edit-mode { border-color: rgba(245, 158, 11, 0.3); }
+.admin-card--edit-mode { border-color: rgba(124, 58, 237, 0.18); }
 
 .admin-card__header-wrap {
   display: flex;
   align-items: stretch;
+  position: relative;
 }
 
 .admin-card__header-wrap .admin-card__header { flex: 1; min-width: 0; }
@@ -957,14 +958,27 @@
 }
 
 .card-edit-actions {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 10px;
-  border-left: 1px solid var(--a-line-2);
-  background: var(--a-bg-soft);
+  flex-direction: row;
+  gap: 3px;
+  padding: 4px;
+  background: var(--a-bg-surface);
+  border: 1px solid var(--a-line-2);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(11, 35, 64, 0.1);
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+}
+
+.admin-card--edit-mode .admin-card__header-wrap:hover .card-edit-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .admin-card__edit-header {
@@ -1226,33 +1240,36 @@
 /* ════════════════════════════════════════════════════════
    EDIT MODE
 ════════════════════════════════════════════════════════ */
-.edit-mode-banner {
+/* edit-mode pill indicator */
+.admin-page__title-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
-  border-radius: 10px;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #78350f;
-  font-size: 13px;
+  flex-wrap: wrap;
 }
 
-.edit-mode-banner > i { color: var(--a-yellow); font-size: 14px; flex-shrink: 0; }
-
-.edit-mode-banner__ic {
+.edit-mode-pill {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  background: rgba(120, 53, 15, 0.1);
-  color: #78350f;
-  font-size: 11px;
-  vertical-align: middle;
-  margin: 0 1px;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #f3e8ff;
+  border: 1px solid #d8b4fe;
+  color: #7c3aed;
+  font-family: var(--a-font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  align-self: center;
+  animation: pill-in .2s ease;
+}
+.edit-mode-pill i { font-size: 8.5px; }
+
+@keyframes pill-in {
+  from { opacity: 0; transform: scale(.88); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 .edit-form-meta { display: flex; flex-direction: column; gap: 12px; }
@@ -1374,9 +1391,41 @@
 .icon-btn--delete { color: var(--a-ink-400); }
 .icon-btn--delete:hover:not(:disabled) { background: #fdecec; color: #b22e2e; border-color: #fca5a5; }
 
-.inline-edit-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
-.inline-edit-actions--inline { display: inline-flex; margin-left: 6px; vertical-align: middle; }
+.inline-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease;
+}
+.inline-edit-actions--inline {
+  display: inline-flex;
+  margin-left: 6px;
+  vertical-align: middle;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease;
+}
 .subitem-row .inline-edit-actions { margin-left: auto; }
+
+/* hover-reveal for subitem row actions */
+.subitem-row:hover .inline-edit-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* hover-reveal for criterion title actions */
+.criterion-block__title:hover .inline-edit-actions--inline {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* always show on touch/small screens */
+@media (max-width: 959px) {
+  .inline-edit-actions,
+  .inline-edit-actions--inline,
+  .card-edit-actions { opacity: 1 !important; pointer-events: auto !important; }
+}
 
 /* Add buttons */
 .add-btn {
@@ -1449,6 +1498,40 @@
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(-10px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════════════════
+   SKELETON LOADING
+════════════════════════════════════════════════════════ */
+@keyframes skel-shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skel {
+  background: linear-gradient(
+    90deg,
+    var(--a-bg-soft) 25%,
+    var(--a-line-2) 50%,
+    var(--a-bg-soft) 75%
+  );
+  background-size: 1200px 100%;
+  animation: skel-shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+  display: block;
+}
+
+.skel--title    { height: 22px; width: 160px; }
+.skel--subtitle { height: 13px; width: 260px; margin-top: 7px; }
+.skel--num      { height: 34px; width: 80px; margin-top: 10px; border-radius: 8px; }
+.skel--icon-sm  { width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; }
+.skel--card-icon{ width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; }
+.skel--badge    { width: 52px; height: 24px; border-radius: 20px; flex-shrink: 0; }
+.skel--btn      { width: 130px; height: 40px; border-radius: 10px; }
+.skel--score-panel {
+  height: 110px;
+  border-radius: 14px;
+  margin-top: 24px;
 }
 
 /* ════════════════════════════════════════════════════════

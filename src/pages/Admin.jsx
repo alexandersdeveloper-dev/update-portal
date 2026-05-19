@@ -61,6 +61,61 @@ function ConfirmDialog({ title, description, confirmLabel = 'Excluir', onConfirm
   )
 }
 
+// ─── Skeleton screens ─────────────────────────────────────────────────────────
+
+function AdminDashboardSkeleton() {
+  return (
+    <div className="admin-page">
+      <div className="admin-page__header">
+        <div>
+          <div className="skel skel--title" />
+          <div className="skel skel--subtitle" />
+        </div>
+      </div>
+      <div className="admin-kpis">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="admin-kpi">
+            <div className="admin-kpi__top">
+              <div className="skel" style={{ height: 11, width: 72 }} />
+              <div className="skel skel--icon-sm" />
+            </div>
+            <div className="skel skel--num" />
+          </div>
+        ))}
+      </div>
+      <div className="skel skel--score-panel" />
+    </div>
+  )
+}
+
+function AdminAvaliacaoSkeleton() {
+  return (
+    <div className="admin-page">
+      <div className="admin-page__header admin-page__header--row">
+        <div>
+          <div className="skel skel--title" />
+          <div className="skel skel--subtitle" />
+        </div>
+        <div className="skel skel--btn" />
+      </div>
+      <div className="admin-cards-list">
+        {[...Array(7)].map((_, i) => (
+          <div key={i} className="admin-card">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '18px 22px' }}>
+              <div className="skel skel--card-icon" />
+              <div style={{ flex: 1 }}>
+                <div className="skel" style={{ height: 14, width: `${90 + (i % 5) * 35}px` }} />
+                <div className="skel" style={{ height: 3, width: '100%', marginTop: 7, borderRadius: 2 }} />
+              </div>
+              <div className="skel skel--badge" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Helpers de score ─────────────────────────────────────────────────────────
 
 function statusValue(status) {
@@ -738,7 +793,8 @@ function AdminContentTopbar({ onMenuOpen }) {
 // ─── Página: Dashboard ────────────────────────────────────────────────────────
 
 export function AdminDashboard() {
-  const { categories, responses } = useAdmin()
+  const { categories, responses, loadingData } = useAdmin()
+  if (loadingData) return <AdminDashboardSkeleton />
 
   const totalCriteria = categories.reduce((s, c) => s + (c.criteria?.length ?? 0), 0)
   const totalSubitems = categories.reduce((s, c) =>
@@ -784,7 +840,7 @@ export function AdminDashboard() {
 // ─── Página: Avaliação ────────────────────────────────────────────────────────
 
 export function AdminAvaliacao() {
-  const { categories, responses, fetchData, saveResponse, saving, showToast } = useAdmin()
+  const { categories, responses, fetchData, saveResponse, saving, showToast, loadingData } = useAdmin()
   const [expandedCard, setExpandedCard] = useState(null)
   const [editMode, setEditMode]         = useState(false)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
@@ -838,11 +894,21 @@ export function AdminAvaliacao() {
     else showToast('Erro ao adicionar categoria: ' + error.message, 'error')
   }
 
+  if (loadingData) return <AdminAvaliacaoSkeleton />
+
   return (
     <div className="admin-page">
       <div className="admin-page__header admin-page__header--row">
         <div>
-          <h2 className="admin-page__title">Avaliação</h2>
+          <div className="admin-page__title-row">
+            <h2 className="admin-page__title">Avaliação</h2>
+            {editMode && (
+              <span className="edit-mode-pill">
+                <i className="bi bi-pencil-fill" />
+                Modo edição
+              </span>
+            )}
+          </div>
           <p className="admin-page__subtitle">Gerencie as categorias, critérios e respostas.</p>
         </div>
         <div className="admin-page__header-actions">
@@ -875,13 +941,6 @@ export function AdminAvaliacao() {
           </button>
         </div>
       </div>
-
-      {editMode && (
-        <div className="edit-mode-banner">
-          <i className="bi bi-pencil-fill" />
-          <span>Modo de edição ativo — clique em <i className="bi bi-pencil edit-mode-banner__ic" /> para editar e <i className="bi bi-trash edit-mode-banner__ic" /> para excluir.</span>
-        </div>
-      )}
 
       {search.trim() && filtered.length === 0 && (
         <p className="admin-empty-search">Nenhuma categoria encontrada para "<strong>{search}</strong>".</p>
@@ -999,15 +1058,6 @@ export default function Admin() {
 
   if (authLoading) return null
 
-  if (loadingData) {
-    return (
-      <div className="admin-loading">
-        <i className="bi bi-arrow-repeat admin-spin" />
-        <span>Carregando avaliação...</span>
-      </div>
-    )
-  }
-
   if (loadError) {
     return (
       <div className="admin-loading">
@@ -1019,7 +1069,7 @@ export default function Admin() {
   }
 
   return (
-    <AdminContext.Provider value={{ categories, responses, fetchData, saveResponse, saving, showToast, showDialog }}>
+    <AdminContext.Provider value={{ categories, responses, fetchData, saveResponse, saving, showToast, showDialog, loadingData }}>
       {dialog && (
         <ConfirmDialog
           title={dialog.title}
