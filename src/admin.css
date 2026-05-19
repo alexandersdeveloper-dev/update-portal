@@ -1239,7 +1239,21 @@
   font-size: 13px;
 }
 
-.edit-mode-banner i { color: var(--a-yellow); font-size: 14px; flex-shrink: 0; }
+.edit-mode-banner > i { color: var(--a-yellow); font-size: 14px; flex-shrink: 0; }
+
+.edit-mode-banner__ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: rgba(120, 53, 15, 0.1);
+  color: #78350f;
+  font-size: 11px;
+  vertical-align: middle;
+  margin: 0 1px;
+}
 
 .edit-form-meta { display: flex; flex-direction: column; gap: 12px; }
 .edit-form-row  { display: flex; flex-direction: column; gap: 5px; }

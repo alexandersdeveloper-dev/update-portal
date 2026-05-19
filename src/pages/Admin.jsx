@@ -789,7 +789,7 @@ export function AdminAvaliacao() {
       {editMode && (
         <div className="edit-mode-banner">
           <i className="bi bi-pencil-fill" />
-          <span>Modo de edição ativo — use <strong>✏️</strong> para editar e <strong>🗑</strong> para excluir.</span>
+          <span>Modo de edição ativo — clique em <i className="bi bi-pencil edit-mode-banner__ic" /> para editar e <i className="bi bi-trash edit-mode-banner__ic" /> para excluir.</span>
         </div>
       )}
 
