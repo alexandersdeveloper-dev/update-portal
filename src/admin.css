@@ -2042,6 +2042,134 @@
 .admin-dash-catmap__pct--gray   { color: var(--a-ink-400); }
 
 /* ════════════════════════════════════════════════════════
+   AVALIAÇÃO — HEADER REFACTORED
+════════════════════════════════════════════════════════ */
+.avl-header {
+  margin-bottom: 22px;
+}
+
+/* — Context layer — */
+.avl-header__ctx {
+  margin-bottom: 14px;
+}
+
+.avl-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 5px;
+}
+
+.avl-header__title {
+  font-family: var(--a-font-display);
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: -.025em;
+  color: var(--a-ink-900);
+  line-height: 1.05;
+  margin: 0;
+}
+
+.avl-header__sub {
+  font-size: 13.5px;
+  color: var(--a-ink-500);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* — Operational toolbar — */
+.avl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 8px 12px;
+  background: var(--a-bg-soft);
+  border: 1px solid var(--a-line);
+  border-radius: 14px;
+}
+
+/* search fills all available space inside toolbar */
+.avl-toolbar > .admin-search {
+  flex: 1;
+  max-width: none;
+  min-width: 0;
+}
+.avl-toolbar > .admin-search:focus-within {
+  max-width: none;
+}
+
+/* — Actions cluster (right) — */
+.avl-toolbar__acts {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.avl-toolbar__divider {
+  width: 1px;
+  height: 20px;
+  background: var(--a-line);
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+/* — PDF button: ghost / low emphasis — */
+.avl-pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-family: var(--a-font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--a-ink-500);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.avl-pdf-btn:hover:not(:disabled) {
+  background: var(--a-bg);
+  border-color: var(--a-line);
+  color: var(--a-ink-700);
+}
+.avl-pdf-btn:disabled { opacity: .5; cursor: default; }
+
+/* — Edit button: special / moderate emphasis — */
+.avl-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: var(--a-bg);
+  border: 1.5px solid var(--a-line);
+  border-radius: 8px;
+  font-family: var(--a-font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--a-ink-700);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+  white-space: nowrap;
+}
+.avl-edit-btn:hover:not(.avl-edit-btn--on) {
+  border-color: var(--a-ink-400);
+  color: var(--a-ink-900);
+}
+.avl-edit-btn--on {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.38);
+  color: rgb(109, 40, 217);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.07);
+}
+.avl-edit-btn--on:hover {
+  background: rgba(124, 58, 237, 0.12);
+}
+
+/* ════════════════════════════════════════════════════════
    RESPONSIVE
 ════════════════════════════════════════════════════════ */
 @media (max-width: 1100px) {
@@ -2061,6 +2189,17 @@
   .score-panel__overall { align-self: flex-start; }
 }
 
+@media (max-width: 680px) {
+  .avl-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .avl-toolbar__acts { justify-content: flex-end; }
+  .avl-toolbar__divider { display: none; }
+}
+
 @media (max-width: 580px) {
   .admin-page__header { flex-direction: column; align-items: flex-start; gap: 14px; }
   .admin-kpis { grid-template-columns: 1fr; }
@@ -2072,6 +2211,8 @@
   .admin-dash-hero { padding: 20px 18px; }
   .admin-dash-hero__num { font-size: 40px; }
   .admin-dash-catmap__name { width: 120px; }
+  .avl-pdf-btn span { display: none; }
+  .avl-pdf-btn { padding: 7px 10px; }
 }
 
 @media (min-width: 960px) {

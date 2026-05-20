@@ -1015,10 +1015,11 @@ export function AdminAvaliacao() {
 
   return (
     <div className="admin-page">
-      <div className="admin-page__header admin-page__header--row">
-        <div>
-          <div className="admin-page__title-row">
-            <h2 className="admin-page__title">Avaliação</h2>
+      {/* ── Layer 1: context ── */}
+      <div className="avl-header">
+        <div className="avl-header__ctx">
+          <div className="avl-header__title-row">
+            <h2 className="avl-header__title">Avaliação</h2>
             {editMode && (
               <span className="edit-mode-pill">
                 <i className="bi bi-pencil-fill" />
@@ -1026,9 +1027,11 @@ export function AdminAvaliacao() {
               </span>
             )}
           </div>
-          <p className="admin-page__subtitle">Gerencie as categorias, critérios e respostas.</p>
+          <p className="avl-header__sub">Gerencie as categorias, critérios e respostas.</p>
         </div>
-        <div className="admin-page__header-actions">
+
+        {/* ── Layer 2: operational toolbar ── */}
+        <div className="avl-toolbar">
           <div className="admin-search" role="search">
             <i className="bi bi-search admin-search__icon" aria-hidden="true" />
             <input
@@ -1053,23 +1056,27 @@ export function AdminAvaliacao() {
               </button>
             )}
           </div>
-          <button
-            className="admin-pdf-btn"
-            onClick={handleExportAll}
-            disabled={downloadingPdf}
-            type="button"
-          >
-            <i className={`bi ${downloadingPdf ? 'bi-hourglass-split' : 'bi-file-earmark-pdf'}`} />
-            {downloadingPdf ? 'Gerando...' : 'PDF'}
-          </button>
-          <button
-            className={`admin-edit-toggle${editMode ? ' admin-edit-toggle--active' : ''}`}
-            onClick={() => setEditMode(v => !v)}
-            type="button"
-          >
-            <i className={`bi ${editMode ? 'bi-pencil-fill' : 'bi-pencil'}`} />
-            {editMode ? 'Edição ativa' : 'Editar estrutura'}
-          </button>
+          <div className="avl-toolbar__acts">
+            <button
+              className="avl-pdf-btn"
+              onClick={handleExportAll}
+              disabled={downloadingPdf}
+              type="button"
+              title="Exportar relatório em PDF"
+            >
+              <i className={`bi ${downloadingPdf ? 'bi-hourglass-split' : 'bi-file-earmark-pdf'}`} />
+              <span>{downloadingPdf ? 'Gerando...' : 'PDF'}</span>
+            </button>
+            <div className="avl-toolbar__divider" />
+            <button
+              className={`avl-edit-btn${editMode ? ' avl-edit-btn--on' : ''}`}
+              onClick={() => setEditMode(v => !v)}
+              type="button"
+            >
+              <i className={`bi ${editMode ? 'bi-pencil-fill' : 'bi-pencil'}`} />
+              {editMode ? 'Edição ativa' : 'Editar estrutura'}
+            </button>
+          </div>
         </div>
       </div>
 
