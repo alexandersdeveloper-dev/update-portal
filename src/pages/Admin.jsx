@@ -912,15 +912,29 @@ export function AdminAvaliacao() {
           <p className="admin-page__subtitle">Gerencie as categorias, critérios e respostas.</p>
         </div>
         <div className="admin-page__header-actions">
-          <div className="admin-search">
-            <i className="bi bi-search admin-search__icon" />
+          <div className="admin-search" role="search">
+            <i className="bi bi-search admin-search__icon" aria-hidden="true" />
             <input
               className="admin-search__input"
               type="search"
-              placeholder="Buscar categoria ou critério..."
+              placeholder="Pesquisar..."
+              aria-label="Pesquisar categorias e critérios"
               value={search}
               onChange={e => setSearch(e.target.value)}
+              autoComplete="off"
+              spellCheck={false}
             />
+            {search && (
+              <button
+                className="admin-search__clear"
+                onClick={() => setSearch('')}
+                type="button"
+                aria-label="Limpar busca"
+                tabIndex={-1}
+              >
+                <i className="bi bi-x-lg" />
+              </button>
+            )}
           </div>
           <button
             className="admin-pdf-btn"
@@ -943,7 +957,10 @@ export function AdminAvaliacao() {
       </div>
 
       {search.trim() && filtered.length === 0 && (
-        <p className="admin-empty-search">Nenhuma categoria encontrada para "<strong>{search}</strong>".</p>
+        <p className="admin-empty-search">
+          <i className="bi bi-search" />
+          Nenhum resultado para "<strong>{search}</strong>".
+        </p>
       )}
       <div className="admin-cards-list">
         {filtered.map((cat, i) => (
