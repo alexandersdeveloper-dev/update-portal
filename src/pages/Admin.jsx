@@ -3,6 +3,7 @@ import { useNavigate, useLocation, NavLink, Outlet } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { FullReportPDFDocument, pdf } from '../CategoryPDF.jsx'
+import { calcCategoryScore, calcOverallScore, scoreColor, statusValue } from '../lib/scoring.js'
 import '../styles.css'
 import '../admin.css'
 
@@ -22,9 +23,9 @@ const IMPORTANCE_OPTIONS = [
 ]
 
 const IMPORTANCE_LABEL = {
-  essencial:    { label: 'Essencial',    weight: 3 },
-  obrigatoria:  { label: 'Obrigatória',  weight: 2 },
-  recomendada:  { label: 'Recomendada',  weight: 1 },
+  essencial:   { label: 'Essencial'   },
+  obrigatoria: { label: 'Obrigatória' },
+  recomendada: { label: 'Recomendada' },
 }
 
 const ICON_RE = /^bi-[a-z0-9-]+$/
@@ -66,12 +67,14 @@ function ConfirmDialog({ title, description, confirmLabel = 'Excluir', onConfirm
 function AdminDashboardSkeleton() {
   return (
     <div className="admin-page">
-      <div className="admin-page__header">
+      <div className="admin-page__header admin-page__header--row">
         <div>
           <div className="skel skel--title" />
           <div className="skel skel--subtitle" />
         </div>
+        <div className="skel skel--btn" />
       </div>
+      <div className="skel" style={{ height: 96, borderRadius: 16, marginBottom: 24 }} />
       <div className="admin-kpis">
         {[...Array(4)].map((_, i) => (
           <div key={i} className="admin-kpi">
@@ -80,10 +83,20 @@ function AdminDashboardSkeleton() {
               <div className="skel skel--icon-sm" />
             </div>
             <div className="skel skel--num" />
+            <div className="skel" style={{ height: 10, width: 90, marginTop: 6 }} />
           </div>
         ))}
       </div>
-      <div className="skel skel--score-panel" />
+      <div style={{ marginTop: 28 }}>
+        {[...Array(6)].map((_, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, padding: '0 2px' }}>
+            <div className="skel" style={{ width: 18, height: 18, borderRadius: 4, flexShrink: 0 }} />
+            <div className="skel" style={{ height: 12, width: `${70 + (i % 5) * 30}px`, flexShrink: 0 }} />
+            <div className="skel" style={{ flex: 1, height: 6, borderRadius: 4 }} />
+            <div className="skel" style={{ width: 34, height: 12, flexShrink: 0 }} />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -116,45 +129,14 @@ function AdminAvaliacaoSkeleton() {
   )
 }
 
-// ─── Helpers de score ─────────────────────────────────────────────────────────
+// ─── Helpers locais ───────────────────────────────────────────────────────────
 
-function statusValue(status) {
-  if (status === 'atendido') return 1.0
-  if (status === 'parcial')  return 0.5
-  return 0.0
-}
-
-function calcCategoryScore(category, responses) {
-  let weightedSum = 0, totalWeight = 0
-  for (const crit of category.criteria ?? []) {
-    const weight = IMPORTANCE_LABEL[crit.importance]?.weight ?? 1
-    let critSum = 0, critCount = 0
-    for (const sub of crit.subitems ?? []) {
-      if (!sub.counts_for_score) continue
-      const status = responses[sub.id]
-      if (status === 'nao_aplicavel') continue
-      critSum += statusValue(status)
-      critCount++
-    }
-    if (critCount === 0) continue
-    weightedSum += (critSum / critCount) * weight
-    totalWeight += weight
-  }
-  if (totalWeight === 0) return null
-  return Math.round((weightedSum / totalWeight) * 100)
-}
-
-function calcOverallScore(categories, responses) {
-  const scores = categories.map(c => calcCategoryScore(c, responses)).filter(s => s !== null)
-  if (scores.length === 0) return null
-  return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-}
-
-function scoreColor(score) {
-  if (score === null) return 'gray'
-  if (score >= 80)   return 'green'
-  if (score >= 50)   return 'yellow'
-  return 'red'
+function timeAgo(iso) {
+  const s = Math.floor((Date.now() - new Date(iso)) / 1000)
+  if (s < 60)    return 'agora há pouco'
+  if (s < 3600)  return `há ${Math.floor(s / 60)} min`
+  if (s < 86400) return `há ${Math.floor(s / 3600)} h`
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' }).format(new Date(iso))
 }
 
 // ─── Score components ─────────────────────────────────────────────────────────
@@ -793,45 +775,172 @@ function AdminContentTopbar({ onMenuOpen }) {
 // ─── Página: Dashboard ────────────────────────────────────────────────────────
 
 export function AdminDashboard() {
-  const { categories, responses, loadingData } = useAdmin()
+  const { categories, responses, loadingData, lastUpdate } = useAdmin()
+  const navigate = useNavigate()
   if (loadingData) return <AdminDashboardSkeleton />
+
+  const overall     = calcOverallScore(categories, responses)
+  const heroAccent  = overall === null ? 'r' : overall >= 80 ? 'b' : overall >= 50 ? 'y' : 'r'
 
   const totalCriteria = categories.reduce((s, c) => s + (c.criteria?.length ?? 0), 0)
   const totalSubitems = categories.reduce((s, c) =>
     s + (c.criteria ?? []).reduce((cs, cr) => cs + (cr.subitems?.length ?? 0), 0), 0)
-  const answered = Object.values(responses).filter(v => v && v !== 'nao_aplicavel').length
-  const overall  = calcOverallScore(categories, responses)
 
-  const scoreAccent = overall === null ? 'r' : overall >= 80 ? 'b' : overall >= 50 ? 'y' : 'r'
+  const totalResponded  = Object.keys(responses).length
+  const naoAplicavel    = Object.values(responses).filter(v => v === 'nao_aplicavel').length
+  const unanswered      = totalSubitems - totalResponded
+  const completude      = totalSubitems > 0 ? Math.round((totalResponded / totalSubitems) * 100) : 0
 
-  const kpis = [
-    { icon: 'bi-grid-1x2-fill',  label: 'Categorias',  value: categories.length,                       accent: 'b' },
-    { icon: 'bi-list-check',     label: 'Critérios',   value: totalCriteria,                            accent: 'o' },
-    { icon: 'bi-check2-circle',  label: 'Respondidos', value: `${answered} / ${totalSubitems}`,         accent: 'y' },
-    { icon: 'bi-graph-up-arrow', label: 'Score Geral', value: overall !== null ? `${overall}%` : '—',  accent: scoreAccent },
-  ]
+  const catScores = categories
+    .map(c => ({ ...c, score: calcCategoryScore(c, responses) }))
+    .sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
+
+  const alertas = catScores.filter(c => c.score !== null && c.score < 50)
+
+  const goToAvaliacao = (categoryId) =>
+    navigate('/admin/avaliacao', categoryId ? { state: { expandCategoryId: categoryId } } : undefined)
 
   return (
     <div className="admin-page">
-      <div className="admin-page__header">
+      <div className="admin-page__header admin-page__header--row">
         <div>
-          <h2 className="admin-page__title">Visão Geral</h2>
-          <p className="admin-page__subtitle">Resumo do índice de transparência do município.</p>
+          <h2 className="admin-page__title">Dashboard</h2>
+          <p className="admin-page__subtitle">Centro operacional do índice de transparência.</p>
+        </div>
+        <button className="admin-dash-cta" onClick={() => goToAvaliacao()} type="button">
+          <i className="bi bi-clipboard-check" /> Ir para Avaliação
+        </button>
+      </div>
+
+      {/* ── Score Hero ── */}
+      <div className={`admin-dash-hero admin-dash-hero--${heroAccent}`}>
+        <div className="admin-dash-hero__main">
+          <span className="admin-dash-hero__num">
+            {overall === null ? '—' : `${overall}%`}
+          </span>
+          <div className="admin-dash-hero__info">
+            <span className="admin-dash-hero__label">Índice de Transparência</span>
+            {lastUpdate && (
+              <span className="admin-dash-hero__ts">
+                <i className="bi bi-clock" /> {timeAgo(lastUpdate)}
+              </span>
+            )}
+          </div>
+        </div>
+        {overall !== null && (
+          <div className="admin-dash-hero__bar">
+            <div
+              className={`admin-dash-hero__bar-fill admin-dash-hero__bar-fill--${heroAccent}`}
+              style={{ width: `${overall}%` }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ── KPIs secundários ── */}
+      <div className="admin-kpis">
+        <div className="admin-kpi admin-kpi--b">
+          <div className="admin-kpi__top">
+            <span className="admin-kpi__label">Completude</span>
+            <span className="admin-kpi__icon"><i className="bi bi-check2-all" /></span>
+          </div>
+          <div className="admin-kpi__num">{completude}%</div>
+          <div className="admin-kpi__sub">{totalResponded} de {totalSubitems} itens</div>
+        </div>
+        <div className={`admin-kpi admin-kpi--${unanswered > 0 ? 'r' : 'b'}`}>
+          <div className="admin-kpi__top">
+            <span className="admin-kpi__label">Sem resposta</span>
+            <span className="admin-kpi__icon"><i className="bi bi-hourglass" /></span>
+          </div>
+          <div className="admin-kpi__num">{unanswered}</div>
+          <div className="admin-kpi__sub">aguardando avaliação</div>
+        </div>
+        <div className="admin-kpi admin-kpi--o">
+          <div className="admin-kpi__top">
+            <span className="admin-kpi__label">N/A</span>
+            <span className="admin-kpi__icon"><i className="bi bi-slash-circle" /></span>
+          </div>
+          <div className="admin-kpi__num">{naoAplicavel}</div>
+          <div className="admin-kpi__sub">excluídos do cálculo</div>
+        </div>
+        <div className="admin-kpi admin-kpi--y">
+          <div className="admin-kpi__top">
+            <span className="admin-kpi__label">Critérios</span>
+            <span className="admin-kpi__icon"><i className="bi bi-list-check" /></span>
+          </div>
+          <div className="admin-kpi__num">{totalCriteria}</div>
+          <div className="admin-kpi__sub">{categories.length} categorias</div>
         </div>
       </div>
 
-      <div className="admin-kpis">
-        {kpis.map(k => (
-          <div key={k.label} className={`admin-kpi admin-kpi--${k.accent}`}>
-            <div className="admin-kpi__top">
-              <span className="admin-kpi__label">{k.label}</span>
-              <span className="admin-kpi__icon"><i className={`bi ${k.icon}`} /></span>
-            </div>
-            <div className="admin-kpi__num">{k.value}</div>
+      {/* ── Alertas ── */}
+      {alertas.length > 0 && (
+        <div className="admin-dash-section">
+          <div className="admin-dash-section__hd">
+            <h3 className="admin-dash-section__title">
+              <i className="bi bi-exclamation-triangle-fill" /> Requer atenção
+            </h3>
+            <span className="admin-dash-section__count">
+              {alertas.length} {alertas.length === 1 ? 'categoria' : 'categorias'} abaixo de 50%
+            </span>
           </div>
-        ))}
+          <div className="admin-dash-alerts">
+            {alertas.map(cat => (
+              <button
+                key={cat.id}
+                className="admin-dash-alert"
+                onClick={() => goToAvaliacao(cat.id)}
+                type="button"
+              >
+                <div className="admin-dash-alert__left">
+                  <i className={`bi ${cat.icon}`} />
+                  <span>{cat.name}</span>
+                </div>
+                <div className="admin-dash-alert__right">
+                  <span className={`score-badge score-badge--${scoreColor(cat.score)}`}>
+                    {cat.score}%
+                  </span>
+                  <i className="bi bi-arrow-right admin-dash-alert__arrow" />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Mapa de categorias ── */}
+      <div className="admin-dash-section">
+        <div className="admin-dash-section__hd">
+          <h3 className="admin-dash-section__title">Todas as categorias</h3>
+        </div>
+        <div className="admin-dash-catmap">
+          {catScores.map(cat => {
+            const color = scoreColor(cat.score)
+            return (
+              <button
+                key={cat.id}
+                className="admin-dash-catmap__item"
+                onClick={() => goToAvaliacao(cat.id)}
+                type="button"
+              >
+                <i className={`bi ${cat.icon} admin-dash-catmap__icon`} />
+                <span className="admin-dash-catmap__name">{cat.name}</span>
+                <div className="admin-dash-catmap__track">
+                  <div
+                    className={`admin-dash-catmap__fill admin-dash-catmap__fill--${color}`}
+                    style={{ width: cat.score !== null ? `${cat.score}%` : '0%' }}
+                  />
+                </div>
+                <span className={`admin-dash-catmap__pct admin-dash-catmap__pct--${color}`}>
+                  {cat.score !== null ? `${cat.score}%` : '—'}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
+      {/* ── Por importância ── */}
       <ScorePanel categories={categories} responses={responses} />
     </div>
   )
@@ -841,10 +950,18 @@ export function AdminDashboard() {
 
 export function AdminAvaliacao() {
   const { categories, responses, fetchData, saveResponse, saving, showToast, loadingData } = useAdmin()
+  const location = useLocation()
   const [expandedCard, setExpandedCard] = useState(null)
   const [editMode, setEditMode]         = useState(false)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    if (location.state?.expandCategoryId && categories.length > 0) {
+      const idx = categories.findIndex(c => c.id === location.state.expandCategoryId)
+      if (idx !== -1) setExpandedCard(idx)
+    }
+  }, [categories, location.state?.expandCategoryId])
 
   const filtered = search.trim()
     ? categories.filter(c =>
@@ -1003,6 +1120,7 @@ export default function Admin() {
   const [toast, setToast]             = useState(null)
   const [dialog, setDialog]           = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [lastUpdate, setLastUpdate]   = useState(null)
 
   function showToast(message, type = 'success') {
     setToast({ message, type })
@@ -1018,9 +1136,10 @@ export default function Admin() {
   }, [session, authLoading, navigate])
 
   const fetchData = useCallback(async () => {
-    const [catResult, respResult] = await Promise.all([
+    const [catResult, respResult, lastResult] = await Promise.all([
       supabase.from('categories').select('*, criteria(*, subitems(*))'),
       supabase.from('responses').select('subitem_id, status'),
+      supabase.from('responses').select('updated_at').order('updated_at', { ascending: false }).limit(1).maybeSingle(),
     ])
 
     if (catResult.error) {
@@ -1048,6 +1167,8 @@ export default function Admin() {
       ;(respResult.data ?? []).forEach(r => { map[r.subitem_id] = r.status })
       setResponses(map)
     }
+
+    if (lastResult?.data?.updated_at) setLastUpdate(lastResult.data.updated_at)
 
     setLoadingData(false)
   }, [])
@@ -1086,7 +1207,7 @@ export default function Admin() {
   }
 
   return (
-    <AdminContext.Provider value={{ categories, responses, fetchData, saveResponse, saving, showToast, showDialog, loadingData }}>
+    <AdminContext.Provider value={{ categories, responses, fetchData, saveResponse, saving, showToast, showDialog, loadingData, lastUpdate }}>
       {dialog && (
         <ConfirmDialog
           title={dialog.title}
