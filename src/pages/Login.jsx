@@ -31,11 +31,9 @@ export default function Login() {
 
         {/* Cabeçalho com identidade do portal */}
         <div className="login-card__brand">
-          <img
-            src="https://acheitudo.com.br/images/logo.png"
-            alt="Logo da Prefeitura de Parintins"
-            className="login-card__logo"
-          />
+          {/* TODO: Recolocar a logo com a classe login-card__logo quando houver
+              uma nova imagem hospedada no próprio portal. A anterior foi ocultada
+              porque o servidor externo bloqueia sua exibição em outros sites. */}
           <div className="login-card__brand-text">
             <span className="login-card__portal-name">Radar Parintins</span>
             <span className="login-card__portal-sub">Município de Parintins / AM</span>

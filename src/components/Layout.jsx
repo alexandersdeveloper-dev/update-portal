@@ -85,15 +85,9 @@ export default function Layout() {
 
         <div className="masthead">
           <div className="container masthead__inner">
-            <div className="brand-cluster">
-              <Link to="/">
-                <img
-                  className="brand-cluster__logo"
-                  src="https://acheitudo.com.br/images/logo.png"
-                  alt="Logo da Prefeitura de Parintins"
-                />
-              </Link>
-            </div>
+            {/* TODO: Recolocar a logo com a classe brand-cluster__logo quando houver
+                uma nova imagem hospedada no próprio portal. A anterior foi ocultada
+                porque o servidor externo bloqueia sua exibição em outros sites. */}
             <div className="masthead__badges">
               <a className="info-badge" href="https://transparencia.parintins.am.gov.br/" target="_blank" rel="noreferrer">
                 <i className="bi bi-shield-check"></i>
